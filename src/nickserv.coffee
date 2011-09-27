@@ -54,26 +54,24 @@ class Nick extends EventEmitter
       irc.conn?.connected
 
     # calls callback when connected
-    ###
     irc.connect = ((connect) ->
-      (retry, callback) =>
+      (retry, callback) ->
         if typeof retry is 'function'
           callback = retry
-          delete retry
+          retry = undefined
         irc.once 'registered', callback
         connect.call(irc, retry)
     )(irc.connect)
 
     # calls callback when disconnected
     irc.disconnect = ((disconnect) ->
-      (msg, callback) =>
+      (msg, callback) ->
         if typeof msg is 'function'
           callback = msg
-          delete msg
+          msg = undefined
         irc.conn.once 'end', callback
         disconnect.call(irc, msg)
     )(irc.disconnect)
-    ###
 
 
     # default callback function will emit error event
