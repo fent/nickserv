@@ -6,7 +6,7 @@ var   fs = require('fs'),
      irc = require('irc'),
 nickserv = require('../lib/nickserv.js'),
 
-  server = 'irc.freenode.net';
+  server = require('optimist').argv.server || 'irc.freenode.net';
 
 
 // add NickServError type checking to assert
