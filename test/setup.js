@@ -87,8 +87,8 @@ var createBot = function(type, nick, fn, log, options) {
       var args = Array.prototype.slice.call(arguments).slice(1);
       bot.disconnect(function() {
         setTimeout(function() {
-          cb.apply(this, args);
-        }, 500);
+          cb.apply(null, args);
+        }, 100);
       });
       if (fd) {
         fs.close(fd);
@@ -102,12 +102,6 @@ var createBot = function(type, nick, fn, log, options) {
     var obj = {
       topic: function(bot) {
         var cb = this.callback;
-        /*
-        console.log(fn);
-        console.log(type);
-        console.log(args);
-        console.log();
-        */
 
         args.push(function(err) {
           bot.kill(cb, null, err, bot);
@@ -131,13 +125,6 @@ var createBot = function(type, nick, fn, log, options) {
     return {
       topic: function(bot) {
         var cb = this.callback;
-        /*
-        console.log(fn);
-        if (realFn) console.log(realFn);
-        console.log(realType || 'Success');
-        console.log(args);
-        console.log();
-        */
 
         args.push(function(err) {
           bot.log = true;
