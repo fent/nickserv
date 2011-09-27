@@ -118,3 +118,12 @@ Emitted when NickServ sends a notice.
 ###Event: 'send'
 `function (msg) { }`
 Emitted when client sends a message to NickServ through this module.
+
+
+Tests
+-----
+To run tests, install with the `--dev` flag to install testing modules. Then go into the nickserv directory and run vows
+
+    vows test/test.js --spec --server='irc.freenode.net'
+
+During testing, log files will be created under `/test/logs`. Different IRC servers might use slightly different versions of NickServ with slightly different configurations. Logs are useful to figure out exactly what is being sent to and received from NickServ.
