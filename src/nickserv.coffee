@@ -77,7 +77,6 @@ class Nick extends EventEmitter
     # default callback function will emit error event
     # used only when callback isn't given
     dcb = (err) =>
-      console.log err
       @emit 'error', err
 
 
