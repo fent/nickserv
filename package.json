@@ -1,0 +1,30 @@
+{
+  "name": "nickserv",
+  "description": "Communicates with the NickServ IRC service",
+  "keywords": ["irc", "nickserv", "nick"],
+  "version": "0.1.0",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/fent/nickserv.git"
+  },
+  "author": "fent (https://github.com/fent)",
+  "main": "./lib/nickserv.js",
+  "directories": {
+    "lib": "./lib"
+  },
+  "engines": {
+    "node": "*"
+  },
+  "dependencies" : {
+    "async": ">=0.1.9",
+    "sprintf": ">=0.1.0"
+  },
+  "devDependencies" : {
+    "irc": ">=0.2.0",
+    "vows": ">=0.5.11"
+  },
+  "licenses": [ {
+    "type": "MIT",
+    "url" : "http://github.com/fent/nickserv/raw/master/LICENSE"
+  }]
+}
