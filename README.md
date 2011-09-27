@@ -110,3 +110,11 @@ The nickserv object emits a handful events to help you track what it's currently
 ###Event: 'error'
 `function (err) { }`
 Emitted when any of the functions are called without a callback and there is an error.
+
+###Event: 'notice'
+`function (text) { }`
+Emitted when NickServ sends a notice.
+
+###Event: 'send'
+`function (msg) { }`
+Emitted when client sends a message to NickServ through this module.
