@@ -15,20 +15,35 @@ class Nick extends EventEmitter
         if nick is 'NickServ'
           notice(text)
 
-    send = (text) ->
-      irc.say 'NickServ', text
+    @send = (cmd) =>
+      args = Array.prototype.slice.call(arguments).slice(1)
+      msg = cmd + ' ' + args.join(' ')
+      irc.say 'NickServ', msg
+      @emit 'send', msg
+
 
     # emit notices by NickServ
+    # keep track of multi part notices
+    blob = ''
     listen (text) =>
+      blob += text + '\n'
       @emit 'notice', text
+      @emit 'blob', blob
 
 
     # keep track if this nick is registered/identified
     registered = identified = false
+    orignick = irc.nick
 
-    # reset on reconnects
+    # reset on reconnects and nick changes
     irc.on 'registered', ->
       registered = identified = false
+
+    # reset on nick change
+    irc.on 'nick', (oldnick, newnick) ->
+      if oldnick is orignick
+        orignick = newnick
+        registered = identified = false
 
     # only set registered on isRegistered check
     # if nick checked is the same as the current nick
@@ -36,16 +51,21 @@ class Nick extends EventEmitter
       if nick is irc.nick
         registered = result
 
+    # a nick must be registered to be identifyable
+    @on 'identified', ->
+      identified = registered = true
+
+    @on 'loggedout', ->
+      identified = false
+
     # when registered, the user is also identified
     # identify does not need to be called
     @on 'registered', ->
-      identified = true
-      registered = true
+      identified = registered = true
 
-    # a nick must be registered to be identifyable
-    @on 'identified', ->
-      identified = true
-      registered = true
+    @on 'dropped', (nick) ->
+      if nick is irc.nick
+        identified = registered = false
 
 
     # add a few extras to the irc object
@@ -84,17 +104,21 @@ class Nick extends EventEmitter
       for name, error of notices.error
         if error.match
           for m in error.match
-            if (m.test? and m.test(text)) or m is text
-              @removeListener 'notice', wait
-              new NickServError cb, name, notices, args
+            result = m.exec(text)
+            if result isnt null
+              @removeListener 'blob', wait
+              new NickServError cb, name, notices, args, result
+              blob = ''
               return true
       false
 
     checkSuccess = (notices, text, wait, cb) =>
       for m in notices.success
-        if (m.test? and m.test(text)) or m is text
-          @removeListener 'notice', wait
-          return cb()
+        result = m.exec(text)
+        if result
+          @removeListener 'blob', wait
+          blob = ''
+          return cb(null, result)
       false
 
 
@@ -102,10 +126,10 @@ class Nick extends EventEmitter
     # if called several times with the same command, will queue up
     # commands listening to each's reply one by one
     queues = {}
-    nickserv = (cmd, msg, cb, notices, args) =>
+    nickserv = (cmd, args, cb, notices, args2) =>
       queues[cmd] ?= async.queue((task, callback) =>
-        newcb = (err) ->
-          task.cb(err)
+        newcb = ->
+          task.cb.apply(null, arguments)
           callback()
 
         # will be called when nickserv sends message
@@ -114,7 +138,7 @@ class Nick extends EventEmitter
             checkSuccess task.notices, text, wait, newcb
 
         # wait for reply
-        @on 'notice', wait
+        @on 'blob', wait
       , 1)
 
       # send nickserv command immediately but only listen to the reply
@@ -122,11 +146,9 @@ class Nick extends EventEmitter
       queues[cmd].push
         cb      : cb
         notices : notices
-        args    : args
+        args    : args2
 
-      msg = cmd + ' ' + msg
-      send msg
-      @emit 'send', msg
+      @send.apply @, [cmd].concat args
 
 
     # callback function is called when it's connected, identified,
@@ -182,12 +204,48 @@ class Nick extends EventEmitter
         return new NickServError cb, 'invalidnick',
           notices.isRegistered, [nick]
 
-      nickserv 'verify register', "#{nick} key", ((err) =>
-        registered = err.type is 'registered'
+      @info nick, (err) =>
+        registered = err?.type isnt 'notregistered'
         @emit 'isregistered', registered, nick
         cb null, registered
 
-        ), notices.isRegistered, [nick]
+    
+    # gets a bunch of info for a nick
+    @info = (nick = irc.nick, cb = dcb) ->
+      @emit 'gettinginfo'
+
+      if test.nick(nick)
+        return new NickServError cb, 'invalidnick',
+          notices.info, [nick]
+
+      newcb = (err, result) =>
+        return cb err if err
+        console.log result
+
+        # make info object
+        info =
+          nick: result[1]
+          realname: result[2]
+        if result[4]
+          info.online = if result[4] is 'online' then true else false
+        else if result[6]
+          info.online = true
+          info.host = result[6]
+        info.registered = result[7]
+        if result[9]
+          info.lastseen = result[9]
+        if result[11]
+          info.lastquitmsg = result[11]
+        if result[13]
+          info.email = result[13]
+        if result[14]
+          info.options = result[14].split(', ')
+        console.log info
+
+        @emit 'info', info
+        cb(null, info)
+
+      nickserv 'info', [nick, 'all'], newcb, notices.info, [nick]
 
 
     # identifies a nick calls cb on success or failure with err arg
@@ -207,7 +265,20 @@ class Nick extends EventEmitter
         @emit 'identified'
         cb()
 
-      nickserv 'identify', password, newcb, notices.identify, [irc.nick]
+      nickserv 'identify', [password], newcb, notices.identify, [irc.nick]
+
+
+    @logout = (cb = dcb) ->
+      @emit 'loggingout'
+
+      if not @isIdentified()
+        return new NickServError cb, 'notidentified', notices.logout
+
+      newcb = =>
+        @emit 'loggedout'
+        cb()
+
+      nickserv 'logout', [], newcb, notices.logout
 
 
     # register current nick with NickServ
@@ -229,15 +300,41 @@ class Nick extends EventEmitter
           [email]
 
       newcb = (err) =>
-        return cb err if err
+        if err
+          if err.type is 'toosoon'
+            time = parseInt err.match[1]
+            setTimeout =>
+              @register password, email, cb
+            , time * 1000
+          else
+            cb err if err
+          return
         @emit 'registered'
         cb()
 
-      nickserv 'register', "#{password} #{email}", newcb, notices.register,
+      nickserv 'register', [password, email], newcb, notices.register,
         [email]
 
 
+    # drops a nick from your group and lets other register it
+    @drop = (nick = irc.nick, cb = dcb) ->
+      @emit 'dropping'
+
+      if not @isIdentified()
+        return new NickServError cb, 'notidentified', notices.drop
+      if test.nick(nick)
+        return new NickServError cb, 'invalidnick', notices.drop, [nick]
+
+      newcb = (err) =>
+        return cb err if err
+        @emit 'dropped'
+        cb()
+
+      nickserv 'drop', [nick], newcb, notices.drop, [nick]
+
+
     # verify nick with a code sent through email
+    verifyCmd = 'verify'
     @verify = (nick, key, cb = dcb) ->
       @emit 'verifying'
 
@@ -252,11 +349,17 @@ class Nick extends EventEmitter
           notices.verifyRegistration, [key]
 
       newcb = (err) =>
-        return cb err if err
+        if err
+          if err.type is 'unknowncommand' and verifyCmd = 'verify'
+            verifyCmd = 'confirm'
+            @verify nick, key, cb
+            return
+          else
+            return cb err if err
         @emit 'verified'
         cb()
 
-      nickserv 'verify register', "#{nick} #{key}", newcb,
+      nickserv 'verify register', [nick, key], newcb,
         notices.verifyRegistration, [nick]
 
 
@@ -275,7 +378,7 @@ class Nick extends EventEmitter
         @emit 'passwordset'
         cb()
 
-      nickserv 'set password', password, newcb, notices.setPassword,
+      nickserv 'set password', [password], newcb, notices.setPassword,
         [password]
 
 

@@ -2,7 +2,7 @@
   "name": "nickserv",
   "description": "Communicates with the NickServ IRC service",
   "keywords": ["irc", "nickserv", "nick"],
-  "version": "0.1.0",
+  "version": "0.2.0",
   "repository": {
     "type": "git",
     "url": "git://github.com/fent/nickserv.git"
