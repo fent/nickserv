@@ -6,8 +6,19 @@ var   fs = require('fs'),
      irc = require('irc'),
 nickserv = require('../lib/nickserv.js'),
 
-  server = require('optimist').argv.server || 'irc.freenode.net';
+  server = require('optimist').argv.server || 'irc.freenode.net',
+       l = require('optimist').argv.logic;
 
+
+// if logic is set, more tests will run that will test the functionality
+// of the program where it doesn't need to send anything to NickServ
+// this helps avoid excesive connections to an irc server when testing
+global.logic = l ? function(o) {
+  return o;
+}
+: function(o, a) {
+  return a || {};
+};
 
 // add NickServError type checking to assert
 assert.type = function(errtype, nick) {
@@ -64,6 +75,7 @@ var createBot = function(type, nick, fn, log, options) {
       debug: false
     });
     bot.log = log !== undefined ? log : true;
+    //bot.log = true
 
     // attach nickserv object to client
     nickserv.create(bot, options);
@@ -147,17 +159,16 @@ var createBot = function(type, nick, fn, log, options) {
       },
       'Success': function(err, bot) {
         assert.equal(nick, bot.nick);
-        if (err) {
-          throw err;
-        }
+        assert.isTrue(!err, err ? err.message : undefined);
       }
     };
   },
-  functions = ['register', 'verify', 'isRegistered',
-               'identify', 'setPassword'],
+  functions = ['register', 'verify', 'isRegistered', 'info',
+               'identify', 'logout', 'setPassword', 'drop'],
   first = {
-    'identify': ['register', 'verify', 'identify', 'setPassword'],
-    'register': ['register'],
+    'identify': ['register', 'verify', 'identify', 'setPassword', 'info',
+                 'logout', 'drop'],
+    'register': ['register', 'drop'],
     'isRegistered': ['register']
   };
 
@@ -200,7 +211,7 @@ isRegistered.success = function(nick, args, realType, realFn) {
   };
 
   obj[type] = function(err, bot, result) {
-    assert.isNull(err);
+    assert.isTrue(!err, err ? err.message : undefined);
     assert.equal(result, registered);
   };
 
@@ -229,7 +240,7 @@ for (var k in first) {
         };
 
         global[fn1][fn2].success = function(nick, args1, args2) {
-          var obj = global[fn1].success(nick, args1, 'Success', fn2);
+          var obj = global[fn1].success(nick, args1, fn1 + '-Success', fn2);
           if (fn1 === 'identify') {
             obj.Identified = obj.Success;
             delete obj.Success;
@@ -280,7 +291,7 @@ global.ready = function(nick, options, emit, dontemit, type) {
   } else {
     obj.Ready = function(n, err, bot) {
       assert.equal(nick, bot.nick);
-      assert.isTrue(!err);
+      assert.isTrue(!err, err ? err.message : undefined);
     };
   }
 
