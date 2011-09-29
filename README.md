@@ -81,89 +81,110 @@ Verifies registraton for the given nick with the given key.
 ### client.nickserv.setPassword(password, callback (err))
 Set the current client nick password with given password.
 
-### client.nickserv.ready([callback (err)], [options])
-If password is given, checks if current nickname is registered. If it's registered, tries to identify. If nick is not registered and email is given, tries to register. When it's all finished and ready, calls `callback`. Providing `options` will use that object to get password and email instead of the one from the constructor.
-
 ### client.cmd(command [, arg1 [, arg2 ..]])
 Sends a command to NickServ. Use this if a command you want to use hasn't been covered by one of the other functions yet.
 
+### client.nickserv.ready([callback (err)], [options])
+If password is given, checks if current nickname is registered. If it's registered, tries to identify. If nick is not registered and email is given, tries to register. When it's all finished and ready, calls `callback`. Providing `options` will use that object to get password and email instead of the one from the constructor.
 
+
+Events
+------
 The nickserv object emits a handful events to help you track what it's currently doing or if you prefer to use emitters to callbacks.
 
 ###Event: 'checkingregistered'
 `function () { }`
+
 `isRegistered` is called
 
 ###Event: 'isregistered'
 `function (registered, nick) { }`
+
 `isRegistered` is finished
 
 ###Event: 'gettinginfo'
 `function () { }`
+
 `info` is called
 
 ###Event: 'info'
 `function (info) { }`
+
 `info` finished getting info successfully
 
 ###Event: 'identifying'
 `function () { }`
+
 `identify` is called
 
 ###Event: 'identified'
 `function () { }`
+
 `identify` successfully finished
 
 ###Event: 'loggingout'
 `function () { }`
+
 `logout` is called
 
 ###Event: 'loggedout'
 `function () { }`
+
 `logout` finished
 
 ###Event: 'registering'
 `function () { }`
+
 `register` is called
 
 ###Event: 'registered'
 `function () { }`
+
 `register` successfully finished
 
 ###Event: 'dropping'
 `function() { }`
+
 `drop` is called
 
 ###Event 'dropped'
 `function() { }`
+
 `drop` successfully finished
 
 ###Event: 'verifying'
 `function () { }`
+
 `verifyRegistration` is called
 
 ###Event: 'verified'
 `function () { }`
+
 `verifyRegistration` successfully finished
 
 ###Event: 'settingpassword'
 `function () { }`
+
 `setPassword` is called
 
 ###Event: 'passwordset'
 `function () { }`
+
 `setPassword` successfully finished
 
 ###Event: 'error'
 `function (err) { }`
+
 Emitted when any of the functions are called without a callback and there is an error.
 
 ###Event: 'notice'
 `function (text) { }`
+
 Emitted when NickServ sends a notice.
 
 ###Event: 'send'
 `function (msg) { }`
+
 Emitted when client sends a message to NickServ through this module.
 
 
