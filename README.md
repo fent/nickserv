@@ -1,7 +1,4 @@
-Install
-------------
-
-    npm install nickserv
+This is a node.js module that communicates with the Nick Service in irc servers.
 
 
 Usage
@@ -188,12 +185,22 @@ Emitted when NickServ sends a notice.
 Emitted when client sends a message to NickServ through this module.
 
 
+Install
+------------
+
+    npm install nickserv
+
+
 Tests
 -----
 This module is hard to test because there are various NickServ software that every IRC server uses. Each one of them has slightly different responses to the functions they provide, and some provide more/less functionality. Running the tests helps to know if this module will work with a server. If it doesn't, it helps make it work.
 
 To run tests, install with the `--dev` flag to install testing modules. Then go into the nickserv directory and run vows
 
-    vows test/test.js --spec --server='irc.freenode.net'
+```bash
+vows test/test.js --spec --server='irc.freenode.net'
+```
 
 During testing, log files will be created under `/test/logs`. Logs are useful to figure out exactly what is being sent to and received from NickServ.
+
+If you don't want to test this against a server, use the `--logic` flag with vows and a mock irc server will be created. This will be much faster and is meant to test only the logic behind nickserv. As oppose to testing what is being sent and received.
