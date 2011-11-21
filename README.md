@@ -1,8 +1,9 @@
+# nickserv[![Build Status](https://secure.travis-ci.org/fent/nickserv.png)](http://travis-ci.org/fent/nickserv)
+
 This is a node.js module that communicates with the Nick Service in irc servers.
 
 
-Usage
-------------------
+# Usage
 
 ```javascript
 var nickserv = require('nickserv'),
@@ -33,7 +34,7 @@ The cool thing about the `ready` function is that if a password is provided, it 
 
 
 API
----------
+
 ### nickserv.create( client, [options])
 Creates a new NickServ instance and attaches it to the `client` under the ke `nickserv`. `options` can be a hash with `password` and `email` that can optionally be used later with `identify`, `register`, and the `ready` functions.
 
@@ -85,8 +86,8 @@ Sends a command to NickServ. Use this if a command you want to use hasn't been c
 If password is given, checks if current nickname is registered. If it's registered, tries to identify. If nick is not registered and email is given, tries to register. When it's all finished and ready, calls `callback`. Providing `options` will use that object to get password and email instead of the one from the constructor.
 
 
-Events
-------
+##Events
+
 The nickserv object emits a handful events to help you track what it's currently doing or if you prefer to use emitters to callbacks.
 
 ###Event: 'checkingregistered'
@@ -185,17 +186,22 @@ Emitted when NickServ sends a notice.
 Emitted when client sends a message to NickServ through this module.
 
 
-Install
-------------
+# Install
 
     npm install nickserv
 
 
-Tests
------
+# Tests
+
 This module is hard to test because there are various NickServ software that every IRC server uses. Each one of them has slightly different responses to the functions they provide, and some provide more/less functionality. Running the tests helps to know if this module will work with a server. If it doesn't, it helps make it work.
 
-To run tests, install with the `--dev` flag to install testing modules. Then go into the nickserv directory and run vows
+All tests are written with [vows](http://vowsjs.org/) and can be run with [npm](http://npmjs.org/)
+
+```bash
+npm test
+```
+
+or directly through vows for more control
 
 ```bash
 vows test/test.js --spec --server='irc.freenode.net'
@@ -204,3 +210,8 @@ vows test/test.js --spec --server='irc.freenode.net'
 During testing, log files will be created under `/test/logs`. Logs are useful to figure out exactly what is being sent to and received from NickServ.
 
 If you don't want to test this against a server, use the `--logic` flag with vows and a mock irc server will be created. This will be much faster and is meant to test only the logic behind nickserv. As oppose to testing what is being sent and received.
+
+
+# License
+
+MIT
