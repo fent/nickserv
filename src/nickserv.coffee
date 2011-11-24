@@ -1,10 +1,10 @@
 # dependencies
-async          = require 'async'
 {EventEmitter} = require 'events'
 
 test           = require './regex.js'
 notices        = require './notices.js'
 NickServError  = require './NickServError.js'
+queue          = require './queue.js'
 
 
 class Nick extends EventEmitter
@@ -16,10 +16,9 @@ class Nick extends EventEmitter
           notice(text)
 
     @send = (cmd) =>
-      args = Array.prototype.slice.call(arguments).slice(1)
-      msg = cmd + ' ' + args.join(' ')
-      irc.say 'NickServ', msg
-      @emit 'send', msg
+      args = Array.prototype.slice.call(arguments).join(' ')
+      @emit 'send', args
+      irc.say 'NickServ', args
 
 
     # emit notices by NickServ
@@ -73,26 +72,6 @@ class Nick extends EventEmitter
     irc.isConnected = ->
       irc.conn?.connected
 
-    # calls callback when connected
-    irc.connect = ((connect) ->
-      (retry, callback) ->
-        if typeof retry is 'function'
-          callback = retry
-          retry = undefined
-        irc.once 'registered', callback
-        connect.call(irc, retry)
-    )(irc.connect)
-
-    # calls callback when disconnected
-    irc.disconnect = ((disconnect) ->
-      (msg, callback) ->
-        if typeof msg is 'function'
-          callback = msg
-          msg = undefined
-        irc.conn.once 'end', callback
-        disconnect.call(irc, msg)
-    )(irc.disconnect)
-
 
     # default callback function will emit error event
     # used only when callback isn't given
@@ -105,7 +84,7 @@ class Nick extends EventEmitter
         if error.match
           for m in error.match
             result = m.exec(text)
-            if result isnt null
+            if result
               @removeListener 'blob', wait
               new NickServError cb, name, notices, args, result
               blob = ''
@@ -127,7 +106,7 @@ class Nick extends EventEmitter
     # commands listening to each's reply one by one
     queues = {}
     nickserv = (cmd, args, cb, notices, args2) =>
-      queues[cmd] ?= async.queue((task, callback) =>
+      queues[cmd] ?= queue((task, callback) =>
         newcb = ->
           task.cb.apply(null, arguments)
           callback()
@@ -172,7 +151,7 @@ class Nick extends EventEmitter
 
               # return error if only one of them was given
               else
-                new NickServError cb, 'notregistered',
+                new NickServError cb, 'notRegistered',
                   notices.isRegistered, [irc.nick]
 
         # without password we can skip all this
@@ -196,16 +175,16 @@ class Nick extends EventEmitter
     @isRegistered = (nick, cb = dcb) ->
       @emit 'checkingregistered'
 
-      # if nick is not privided, not async version
+      # if nick is not provided, not async version
       if not nick?
         return registered
 
       if test.nick(nick)
-        return new NickServError cb, 'invalidnick',
+        return new NickServError cb, 'invalidNick',
           notices.isRegistered, [nick]
 
       @info nick, (err) =>
-        registered = err?.type isnt 'notregistered'
+        registered = err?.type isnt 'notRegistered'
         @emit 'isregistered', registered, nick
         cb null, registered
 
@@ -215,12 +194,11 @@ class Nick extends EventEmitter
       @emit 'gettinginfo'
 
       if test.nick(nick)
-        return new NickServError cb, 'invalidnick',
+        return new NickServError cb, 'invalidNick',
           notices.info, [nick]
 
       newcb = (err, result) =>
         return cb err if err
-        console.log result
 
         # make info object
         info =
@@ -240,7 +218,6 @@ class Nick extends EventEmitter
           info.email = result[13]
         if result[14]
           info.options = result[14].split(', ')
-        console.log info
 
         @emit 'info', info
         cb(null, info)
@@ -253,11 +230,11 @@ class Nick extends EventEmitter
       @emit 'identifying'
 
       if @isIdentified()
-        return new NickServError cb, 'alreadyidentified', notices.identify
+        return new NickServError cb, 'alreadyIdentified', notices.identify
 
       # check password is correct length, doesnt contain white space
       if test.password(password)
-        return new NickServError cb, 'invalidpassword', notices.identify,
+        return new NickServError cb, 'invalidPassword', notices.identify,
           [password]
 
       newcb = (err) =>
@@ -272,7 +249,7 @@ class Nick extends EventEmitter
       @emit 'loggingout'
 
       if not @isIdentified()
-        return new NickServError cb, 'notidentified', notices.logout
+        return new NickServError cb, 'notIdentified', notices.logout
 
       newcb = =>
         @emit 'loggedout'
@@ -287,21 +264,21 @@ class Nick extends EventEmitter
       @emit 'registering'
 
       if @isIdentified()
-        return new NickServError cb, 'alreadyidentified', notices.register
+        return new NickServError cb, 'alreadyIdentified', notices.register
       if @isRegistered()
-        return new NickServError cb, 'alreadyregistered', notices.register
+        return new NickServError cb, 'alreadyRegistered', notices.register
 
       # first check password and email
       if test.password(password)
-        return new NickServError cb, 'invalidpassword', notices.register,
+        return new NickServError cb, 'invalidPassword', notices.register,
           [password]
       if test.email(email)
-        return new NickServError cb, 'invalidemail', notices.register,
+        return new NickServError cb, 'invalidEmail', notices.register,
           [email]
 
       newcb = (err) =>
         if err
-          if err.type is 'toosoon'
+          if err.type is 'tooSoon'
             time = parseInt err.match[1]
             setTimeout =>
               @register password, email, cb
@@ -321,9 +298,9 @@ class Nick extends EventEmitter
       @emit 'dropping'
 
       if not @isIdentified()
-        return new NickServError cb, 'notidentified', notices.drop
+        return new NickServError cb, 'notIdentified', notices.drop
       if test.nick(nick)
-        return new NickServError cb, 'invalidnick', notices.drop, [nick]
+        return new NickServError cb, 'invalidNick', notices.drop, [nick]
 
       newcb = (err) =>
         return cb err if err
@@ -334,23 +311,23 @@ class Nick extends EventEmitter
 
 
     # verify nick with a code sent through email
-    verifyCmd = 'verify'
+    verifyCmd = 'verify register'
     @verify = (nick, key, cb = dcb) ->
       @emit 'verifying'
 
       if not @isIdentified()
-        return new NickServError cb, 'notidentified',
+        return new NickServError cb, 'notIdentified',
           notices.verifyRegistration
       if test.nick(nick)
-        return new NickServError cb, 'invalidnick',
+        return new NickServError cb, 'invalidNick',
           notices.verifyRegistration, [nick]
       if test.key(key)
-        return new NickServError cb, 'invalidkey',
+        return new NickServError cb, 'invalidKey',
           notices.verifyRegistration, [key]
 
       newcb = (err) =>
         if err
-          if err.type is 'unknowncommand' and verifyCmd = 'verify'
+          if err.type is 'unknownCommand' and verifyCmd = 'verify register'
             verifyCmd = 'confirm'
             @verify nick, key, cb
             return
@@ -359,7 +336,7 @@ class Nick extends EventEmitter
         @emit 'verified'
         cb()
 
-      nickserv 'verify register', [nick, key], newcb,
+      nickserv verifyCmd, [nick, key], newcb,
         notices.verifyRegistration, [nick]
 
 
@@ -368,9 +345,9 @@ class Nick extends EventEmitter
       @emit 'settingpassword'
 
       if not @isIdentified()
-        return new NickServError cb, 'notidentified', notices.setPassword
+        return new NickServError cb, 'notIdentified', notices.setPassword
       if test.password(password)
-        return new NickServError cb, 'invalidpassword',
+        return new NickServError cb, 'invalidPassword',
           notices.setPassword, [password]
 
       newcb = (err) =>
