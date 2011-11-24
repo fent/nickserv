@@ -9,7 +9,7 @@
   },
   "author": "Roly Fentanes (https://github.com/fent)",
   "main": "./lib/nickserv.js",
-  "scripts":
+  "scripts": {
     "test": "vows test/test.js --spec --logic"
   },
   "directories": {
@@ -18,10 +18,10 @@
   "engines": {
     "node": "*"
   },
-  "dependencies" : {
+  "dependencies": {
     "sprintf": ">=0.1.0"
   },
-  "devDependencies" : {
+  "devDependencies": {
     "irc": ">=0.3.0",
     "vows": ">=0.5.11",
     "optimist": ">=0.2.6"

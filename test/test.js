@@ -1,13 +1,16 @@
-var vows = require('vows'),
-       l = require('optimist').argv.logic,
-       v = require('optimist').argv.verify;
-           require('./setup.js');
+var vows = require('vows')
+  ,    l = require('optimist').argv.logic
+  ,    v = require('optimist').argv.verify
+  ;
+
+require('./setup.js');
 
 
 // keep track of registered user
 var user = {
   nick: uniqueNick(),
   password: 'hunter2',
+  password2: 'acceptable'
 };
 user.email = user.nick + '@mailinator.com';
 var user2 = uniqueNick();
@@ -26,7 +29,7 @@ vows.describe('register')
           ['no', 'hi@mail.com'])),
 
       /*
-      some irc servers don't return an error for this
+      // some irc servers don't return an error for this
       'using a password that is too long':
         register('Invalid Parameters', uniqueNick(),
           ['looooooooooooooooooooooooooooooooooooooooong', 'hi@mail.com']),
@@ -72,7 +75,7 @@ vows.describe('info')
     'Get info': {
       'from a bad nick':
         logic(info('Invalid Nick', uniqueNick(),
-          ['no'])),
+          ['no has'])),
 
       'from a nonregistered nick':
         info('Not Registered', uniqueNick(),
@@ -96,25 +99,23 @@ vows.describe('info')
 
 
 // check that the nick registered appears registered
-if (l) {
-  vows.describe('isRegistered')
-    .addBatch({
-      'Check': {
-        'a nick that cant exist':
-          isRegistered('Invalid Nick', uniqueNick(),
-            ['bad nick']),
-        
-        'a nick that does not exist yet':
-          isRegistered.success(uniqueNick(),
-            [uniqueNick(), false]),
-        
-        'the nick we registered':
-          isRegistered.success(uniqueNick(),
-            [user.nick, true])
-      }
-    })
-    .export(module);
-}
+vows.describe('isRegistered')
+  .addBatch({
+    'Check': {
+      'a nick that cant exist':
+        logic(isRegistered('Invalid Nick', uniqueNick(),
+          ['bad nick'])),
+      
+      'a nick that does not exist yet':
+        isRegistered.success(uniqueNick(),
+          [uniqueNick(), false]),
+      
+      'the nick we registered':
+        isRegistered.success(uniqueNick(),
+          [user.nick, true])
+    }
+  })
+  .export(module);
 
 
 // identify the nick that we registered and verified
@@ -262,7 +263,7 @@ vows.describe('setPassword')
       'to another acceptable password':
         identify.setPassword.success(user.nick,
           [user.password],
-          ['acceptable'])
+          [user.password2])
     }
   })
   .export(module);
@@ -311,7 +312,7 @@ vows.describe('drop')
       
       'a badly made up nick':
         logic(identify.drop('Invalid Nick', user.nick,
-          [user.password],
+          [user.password2],
           ['!welp'])),
     }
   })
@@ -319,7 +320,7 @@ vows.describe('drop')
     'Drop': {
       'a nick that is not registered':
         identify.drop('Not Registered', user.nick,
-          [user.password],
+          [user.password2],
           [uniqueNick()])
     }
   })
@@ -335,7 +336,7 @@ vows.describe('drop')
     'Drop': {
       'the one nick these tests registered':
         identify.drop.success(user.nick,
-          [user.password]
+          [user.password2],
           [user.nick]),
       'the nick used to test dropping not in our group':
         identify.drop.success(user2,

@@ -6,9 +6,12 @@ var   fs = require('fs'),
      irc = require('irc'),
 nickserv = require('../lib/nickserv.js'),
 
-  server = require('optimist').argv.server || 'irc.freenode.net',
+  server = require('optimist').argv.server || null,
        l = require('optimist').argv.logic;
 
+
+// mock the irc module if logic is set
+var irc = require(server === null ? './mock/irc' : 'irc');
 
 // if logic is set, more tests will run that will test the functionality
 // of the program where it doesn't need to send anything to NickServ
@@ -20,9 +23,21 @@ global.logic = l ? function(o) {
   return a || {};
 };
 
+
+// converst str to cammel case
+// thank you: tjholowaychuk
+function camelcase(str) {
+  var parts = str.toLowerCase().split(/\s+/);
+  var buf = parts.shift();
+  return buf + parts.map(function(part){
+    return part[0].toUpperCase() + part.slice(1);
+  }).join('');
+}
+
+
 // add NickServError type checking to assert
 assert.type = function(errtype, nick) {
-  errtype = errtype.replace(/ /g, '').toLowerCase();
+  errtype = camelcase(errtype);
   return function(n, err, bot) {
     assert.equal(nick, bot.nick);
     assert.ok(err);
