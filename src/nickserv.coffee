@@ -5,6 +5,7 @@ test           = require './regex.js'
 notices        = require './notices.js'
 NickServError  = require './NickServError.js'
 queue          = require './queue.js'
+cmds           = require './cmds.js'
 
 
 class Nick extends EventEmitter
@@ -73,26 +74,42 @@ class Nick extends EventEmitter
       irc.conn?.connected
 
 
+    # keep track of command aliases
+    cmdState = {}
+    for cmd of cmds
+      cmdState[cmd] = 0
+
+
     # default callback function will emit error event
     # used only when callback isn't given
     dcb = (err) =>
       @emit 'error', err
 
 
-    checkError = (notices, text, wait, cb, args) =>
-      for name, error of notices.error
+    checkError = (task, text, wait, cb) =>
+      cmd = task.cmd
+      for name, error of notices[cmd].error
         if error.match
           for m in error.match
             result = m.exec(text)
             if result
               @removeListener 'blob', wait
-              new NickServError cb, name, notices, args, result
               blob = ''
+
+              # check for unknownCommand error
+              if name is 'unknownCommand' and cmdState[cmd] isnt (cmds[cmd].length - 1)
+                cmdState[cmd]++
+                @nickserv cmd, task.args, task.cb, task.args2
+
+              else
+                new NickServError cb, name, notices[cmd], task.args2, result
+
               return true
       false
 
-    checkSuccess = (notices, text, wait, cb) =>
-      for m in notices.success
+
+    checkSuccess = (cmd, text, wait, cb) =>
+      for m in notices[cmd].success
         result = m.exec(text)
         if result
           @removeListener 'blob', wait
@@ -105,7 +122,7 @@ class Nick extends EventEmitter
     # if called several times with the same command, will queue up
     # commands listening to each's reply one by one
     queues = {}
-    nickserv = (cmd, args, cb, notices, args2) =>
+    nickserv = (cmd, args, cb, args2) =>
       queues[cmd] ?= queue((task, callback) =>
         newcb = ->
           task.cb.apply(null, arguments)
@@ -113,8 +130,8 @@ class Nick extends EventEmitter
 
         # will be called when nickserv sends message
         wait = (text) ->
-          if not checkError task.notices, text, wait, newcb, task.args
-            checkSuccess task.notices, text, wait, newcb
+          if not checkError task, text, wait, newcb
+            checkSuccess task.cmd, text, wait, newcb
 
         # wait for reply
         @on 'blob', wait
@@ -123,11 +140,12 @@ class Nick extends EventEmitter
       # send nickserv command immediately but only listen to the reply
       # to one of the same command at a time
       queues[cmd].push
+        cmd     : cmd
+        args    : args
         cb      : cb
-        notices : notices
-        args    : args2
+        args2   : args2
 
-      @send.apply @, [cmd].concat args
+      @send.apply @, [cmds[cmd][cmdState[cmd]]].concat args
 
 
     # callback function is called when it's connected, identified,
@@ -222,7 +240,7 @@ class Nick extends EventEmitter
         @emit 'info', info
         cb(null, info)
 
-      nickserv 'info', [nick, 'all'], newcb, notices.info, [nick]
+      nickserv 'info', [nick, 'all'], newcb, [nick]
 
 
     # identifies a nick calls cb on success or failure with err arg
@@ -242,7 +260,7 @@ class Nick extends EventEmitter
         @emit 'identified'
         cb()
 
-      nickserv 'identify', [password], newcb, notices.identify, [irc.nick]
+      nickserv 'identify', [password], newcb, [irc.nick]
 
 
     @logout = (cb = dcb) ->
@@ -255,7 +273,7 @@ class Nick extends EventEmitter
         @emit 'loggedout'
         cb()
 
-      nickserv 'logout', [], newcb, notices.logout
+      nickserv 'logout', [], newcb
 
 
     # register current nick with NickServ
@@ -289,8 +307,7 @@ class Nick extends EventEmitter
         @emit 'registered'
         cb()
 
-      nickserv 'register', [password, email], newcb, notices.register,
-        [email]
+      nickserv 'register', [password, email], newcb, [email]
 
 
     # drops a nick from your group and lets other register it
@@ -307,11 +324,10 @@ class Nick extends EventEmitter
         @emit 'dropped'
         cb()
 
-      nickserv 'drop', [nick], newcb, notices.drop, [nick]
+      nickserv 'drop', [nick], newcb, [nick]
 
 
     # verify nick with a code sent through email
-    verifyCmd = 'verify register'
     @verify = (nick, key, cb = dcb) ->
       @emit 'verifying'
 
@@ -326,18 +342,11 @@ class Nick extends EventEmitter
           notices.verifyRegistration, [key]
 
       newcb = (err) =>
-        if err
-          if err.type is 'unknownCommand' and verifyCmd = 'verify register'
-            verifyCmd = 'confirm'
-            @verify nick, key, cb
-            return
-          else
-            return cb err if err
+        return cb err if err
         @emit 'verified'
         cb()
 
-      nickserv verifyCmd, [nick, key], newcb,
-        notices.verifyRegistration, [nick]
+      nickserv 'verify', [nick, key], newcb, [nick]
 
 
     # changes current nick's password
@@ -355,8 +364,7 @@ class Nick extends EventEmitter
         @emit 'passwordset'
         cb()
 
-      nickserv 'set password', [password], newcb, notices.setPassword,
-        [password]
+      nickserv 'setPassword', [password], newcb, [password]
 
 
 # export

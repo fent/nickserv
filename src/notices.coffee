@@ -15,6 +15,11 @@ module.exports =
           /^(.+) is not a registered nickname\.$/m
           /^Your nick isn't registered\.$/m
         ]
+      unknownCommand: unknownCommand =
+        msg: 'Unknown Command'
+        match: [
+          /^Unknown command verify\.  "\/msg NickServ HELP" for help\./m
+        ]
       wrongPassword:
         msg: 'Wrong password.'
         match: [
@@ -39,6 +44,7 @@ module.exports =
         match: [
           /^You must first be identified./m
         ]
+      unknownCommand: unknownCommand
     success: [
       /^Your nick has been logged out\.$/m
     ]
@@ -46,6 +52,7 @@ module.exports =
   register:
     error:
       invalidPassword: invalidPassword
+      unknownCommand: unknownCommand
       invalidEmail:
         msg: '%s is not a valid email address.'
         match: [
@@ -93,6 +100,7 @@ module.exports =
         msg: 'Nickname is invalid.'
       notIdentified: notIdentified
       notRegistered: notRegistered
+      unknownCommand: unknownCommand
       accessDenied:
         msg: 'Access denied.'
         match: [
@@ -105,6 +113,7 @@ module.exports =
   setPassword:
     error:
       invalidPassword: invalidPassword
+      unknownCommand: unknownCommand
       invalidParameters:
         msg: 'Invalid parameters for password.'
         match: [
@@ -115,7 +124,7 @@ module.exports =
       /^The password for (.+) has been changed to (.+)\.$/m
     ]
 
-  verifyRegistration:
+  verify:
     error:
       invalidNick: invalidNick
       invalidKey:
@@ -137,11 +146,7 @@ module.exports =
         ]
       notRegistered: notRegistered
       notIdentified: notIdentified
-      unknownCommand:
-        msg: 'Unknown Command'
-        match: [
-          /^Unknown command verify\.  "\/msg NickServ HELP" for help\./m
-        ]
+      unknownCommand: unknownCommand
     success: [
       /^(.+) has now been verified\.$/m
     ]
@@ -151,6 +156,7 @@ module.exports =
       invalidNick: invalidNick
       notIdentified: notIdentified
       notRegistered: notRegistered
+      unknownCommand: unknownCommand
       networkServices:
         msg: '%s is part of network services.'
         match: [
