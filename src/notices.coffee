@@ -7,22 +7,22 @@
 module.exports =
   identify:
     error:
-      invalidpassword: invalidpassword =
+      invalidPassword: invalidPassword =
         msg: '%s is not a valid password.'
-      notregistered:
+      notRegistered: notRegistered =
         msg: '%s is not a registered nickname.'
         match: [
           /^(.+) is not a registered nickname\.$/m
           /^Your nick isn't registered\.$/m
         ]
-      wrongpassword:
+      wrongPassword:
         msg: 'Wrong password.'
         match: [
           /^Invalid password for .+\.$/m
         ]
-      alreadyidentified: alreadyidentified =
+      alreadyIdentified: alreadyIdentified =
         msg: 'You are already identified.'
-      awaitingverification: awaitingverification =
+      awaitingVerification: awaitingVerification =
         msg: 'This nick is awaiting email verification.'
         match: [
           /^This nick is awaiting an e-mail verification code before completing registration\.$/m
@@ -34,37 +34,40 @@ module.exports =
 
   logout:
     error:
-      notidentified: notidentified =
+      notIdentified: notIdentified =
         msg: 'You must first be identified.'
+        match: [
+          /^You must first be identified./m
+        ]
     success: [
       /^Your nick has been logged out\.$/m
     ]
 
   register:
     error:
-      invalidpassword: invalidpassword
-      invalidemail:
+      invalidPassword: invalidPassword
+      invalidEmail:
         msg: '%s is not a valid email address.'
         match: [
           /^(.+) is not a valid email address\.$/m
         ]
-      invalidparameters:
+      invalidParameters:
         msg: 'Invalid parameters for register'
         match: [
           /^Your password is too long\. Please try again with a shorter password\.$/m
           /^Invalid parameters for REGISTER\.$/m
         ]
-      toomanyaccounts:
+      tooManyAccounts:
         msg: '%s has too many accounts registered.'
         match: [
           /^(.+) has too many accounts registered\.$/m
         ]
-      notenoughparameters:
+      notEnoughParameters:
         msg: 'Insufficient parameters for register.'
         match: [
           /^Insufficient parameters for REGISTER\.$/m
         ]
-      alreadyregistered:
+      alreadyRegistered:
         msg: 'You are already registered.'
         match: [
           /^(.+) is already registered\.$/m
@@ -72,8 +75,8 @@ module.exports =
           /^This nick is awaiting an e-mail verification code before completing registration\.$/m
           /^This nick has already been requested, please check your e-mail address for the pass code$/m
         ]
-      alreadyidentified: alreadyidentified
-      toosoon:
+      alreadyIdentified: alreadyIdentified
+      tooSoon:
         msg: 'You must be using this nick for a bit before registering.'
         match: [
           /^You must have been using this nick for at least (\d+) (\w+) to register\.$/m
@@ -86,15 +89,12 @@ module.exports =
 
   drop:
     error:
-      invalidnick: invalidnick
-      notidentified: notidentified
-      notregistered:
-        msg: '%s is not registered'
-        match: [
-          /^Nick (.+) isn't registered\.$/m
-        ]
-      accessdenied:
-        msg: 'Access denied'
+      invalidNick: invalidNick =
+        msg: 'Nickname is invalid.'
+      notIdentified: notIdentified
+      notRegistered: notRegistered
+      accessDenied:
+        msg: 'Access denied.'
         match: [
           /^Access denied\.$/m
         ]
@@ -104,45 +104,40 @@ module.exports =
 
   setPassword:
     error:
-      invalidpassword: invalidpassword
-      invalidparameters:
+      invalidPassword: invalidPassword
+      invalidParameters:
         msg: 'Invalid parameters for password.'
         match: [
           /^Invalid parameters for PASSWORD\.$/m
         ]
-      notidentified: notidentified
+      notIdentified: notIdentified
     success: [
       /^The password for (.+) has been changed to (.+)\.$/m
     ]
 
   verifyRegistration:
     error:
-      invalidnick: invalidnick =
-        msg: 'Nickname is invalid.'
-      invalidkey:
+      invalidNick: invalidNick
+      invalidKey:
         msg: 'Key is invalid.'
-      invalidparameters:
+      invalidParameters:
         msg: 'Insufficient parameters for verify.'
         match: [
           /^Insufficient parameters for VERIFY\.$/m
         ]
-      notawaiting:
+      notAwaiting:
         msg: '%s is not awaiting authorization.'
         match: [
           /^(.+) is not awaiting authorization\.$/m
         ]
-      wrongkey:
+      wrongKey:
         msg: 'Wrong key.'
         match: [
           /^Verification failed\. Invalid key for (.+)\.$/m
         ]
-      notregistered:
-        msg: '%s is not registered.'
-        match: [
-          /^(.+) is not registered\.$/m
-        ]
-      notidentified: notidentified
-      unknowncommand:
+      notRegistered: notRegistered
+      notIdentified: notIdentified
+      unknownCommand:
         msg: 'Unknown Command'
         match: [
           /^Unknown command verify\.  "\/msg NickServ HELP" for help\./m
@@ -153,18 +148,20 @@ module.exports =
 
   info:
     error:
-      invalidnick: invalidnick
-      notregistered:
-        msg: '%s is not registered.'
-        match: [
-          /^Nick (.+) isn't registered\.$/m
-        ]
-      networkservices:
+      invalidNick: invalidNick
+      notIdentified: notIdentified
+      notRegistered: notRegistered
+      networkServices:
         msg: '%s is part of network services.'
         match: [
           /^Nick (.+) is part of this Network's Services\.$/m
         ]
-      awaitingverification: awaitingverification
+      awaitingVerification: awaitingVerification
     success: [
       /^([\w\d]+) is ([\w\d\s]+)$(\n^[\w\d]+ is currently (online|offline)\.)?(\n^   Is online from: (.+)$)?\n^  Time registered: (.+)$(\n^   Last seen time: (.+)$)?(\n^Last quit message: (.+)$)?(\n^   E-mail address: (.+)$\n^          Options: (.+)$)?/m
     ]
+
+  isRegistered:
+    error:
+      invalidNick: invalidNick
+      notRegistered: notRegistered
