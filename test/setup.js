@@ -62,7 +62,12 @@ global.uniqueNick = function() {
 // macros
 var createBot = function(type, nick, fn, log, options) {
     // make server folder if it doesn't exist
-    var dir = __dirname + '/logs/' + server;
+    var dir = __dirname + '/logs/'
+    if (!path.existsSync(dir)) {
+      fs.mkdirSync(dir, 0744);
+    }
+
+    dir += server;
     if (!path.existsSync(dir)) {
       fs.mkdirSync(dir, 0744);
     }
