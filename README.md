@@ -1,4 +1,4 @@
-# nickserv[![Build Status](https://secure.travis-ci.org/fent/nickserv.png)](http://travis-ci.org/fent/nickserv)
+# nickserv [![Build Status](https://secure.travis-ci.org/fent/nickserv.png)](http://travis-ci.org/fent/nickserv)
 
 This is a node.js module that communicates with the Nick Service in irc servers.
 
