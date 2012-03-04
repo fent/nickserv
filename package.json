@@ -19,12 +19,13 @@
     "node": "*"
   },
   "dependencies": {
-    "sprintf": ">=0.1.0"
+    "sprintf": "0.1.x"
   },
   "devDependencies": {
     "irc": "0.3.x",
-    "vows": ">=0.5.11",
-    "optimist": "0.2.x"
+    "vows": "0.5.x",
+    "optimist": "0.2.x",
+    "mkdirp": "0.3.x"
   },
   "licenses": [ {
     "type": "MIT",

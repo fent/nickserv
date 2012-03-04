@@ -1,13 +1,14 @@
-var   fs = require('fs'),
-    path = require('path'),
-  assert = require('assert'),
-    http = require('http'),
+var fs     = require('fs')
+  , path   = require('path')
+  , assert = require('assert')
+  , http   = require('http')
 
-     irc = require('irc'),
-nickserv = require('../lib/nickserv.js'),
+  , mkdirp   = require('mkdirp')
+  , irc      = require('irc')
+  , nickserv = require('..')
 
-  server = require('optimist').argv.server || null,
-       l = require('optimist').argv.logic;
+  , server = require('optimist').argv.server || null
+  , l      = require('optimist').argv.logic
 
 
 // mock the irc module if logic is set
@@ -62,24 +63,13 @@ global.uniqueNick = function() {
 // macros
 var createBot = function(type, nick, fn, log, options) {
     // make server folder if it doesn't exist
-    var dir = __dirname + '/logs/'
-    if (!path.existsSync(dir)) {
-      fs.mkdirSync(dir, 0744);
-    }
-
-    dir += server;
-    if (!path.existsSync(dir)) {
-      fs.mkdirSync(dir, 0744);
-    }
-
-    // make fn folder
-    dir += '/' + fn;
+    var dir = path.join(__dirname, 'logs', server || 'null', fn);
 
     // append txt to file
     var fd, append = function(txt) {
       if (!fd) {
         if (!path.existsSync(dir)) {
-          fs.mkdirSync(dir, 0744);
+          mkdirp.sync(dir);
         }
 
         // create log file only if append is called at least once
