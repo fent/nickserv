@@ -7,8 +7,10 @@ var fs     = require('fs')
   , irc      = require('irc')
   , nickserv = require('..')
 
-  , server = require('optimist').argv.server || null
-  , l      = require('optimist').argv.logic
+  , server     = require('optimist').argv.server || null
+  , l          = require('optimist').argv.logic
+  , existsSync = fs.existsSync || path.existsSync
+  ;
 
 
 // mock the irc module if logic is set
@@ -68,7 +70,7 @@ var createBot = function(type, nick, fn, log, options) {
     // append txt to file
     var fd, append = function(txt) {
       if (!fd) {
-        if (!path.existsSync(dir)) {
+        if (!existsSync(dir)) {
           mkdirp.sync(dir);
         }
 
