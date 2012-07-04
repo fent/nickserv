@@ -15,9 +15,6 @@
   "directories": {
     "lib": "./lib"
   },
-  "engines": {
-    "node": "*"
-  },
   "dependencies": {
     "sprintf": "0.1.x"
   },
