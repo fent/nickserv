@@ -9,7 +9,7 @@ var fs     = require('fs')
 
   , server     = require('optimist').argv.server || null
   , l          = require('optimist').argv.logic
-  , existsSync = fs.existsSync || path.existsSync
+  , existsSync = fs.existsSync || fs.existsSync
   ;
 
 
