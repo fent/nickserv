@@ -91,97 +91,84 @@ If password is given, checks if current nickname is registered. If it's register
 The nickserv object emits a handful events to help you track what it's currently doing or if you prefer to use emitters to callbacks.
 
 ### Event: 'checkingregistered'
-`function () { }`
 
-`isRegistered` is called
+`isRegistered` is called.
 
 ### Event: 'isregistered'
-`function (registered, nick) { }`
+* `boolean` - True if nick is registered.
+* `strign` - Nick.
 
-`isRegistered` is finished
+`isRegistered` is finished.
 
 ### Event: 'gettinginfo'
-`function () { }`
 
 `info` is called
 
 ### Event: 'info'
-`function (info) { }`
+* `Object` - Info.
 
-`info` finished getting info successfully
+`info` finished getting info successfully.
 
 ### Event: 'identifying'
-`function () { }`
 
-`identify` is called
+`identify` is called.
 
 ### Event: 'identified'
-`function () { }`
 
-`identify` successfully finished
+`identify` successfully finished.
 
 ### Event: 'loggingout'
-`function () { }`
 
-`logout` is called
+`logout` is called.
 
 ### Event: 'loggedout'
-`function () { }`
 
-`logout` finished
+`logout` finished.
 
 ### Event: 'registering'
-`function () { }`
 
-`register` is called
+`register` is called.
 
 ### Event: 'registered'
-`function () { }`
 
-`register` successfully finished
+`register` successfully finished.
 
 ### Event: 'dropping'
-`function() { }`
 
-`drop` is called
+`drop` is called.
 
 ### Event 'dropped'
-`function() { }`
 
-`drop` successfully finished
+`drop` successfully finished.
 
 ### Event: 'verifying'
-`function () { }`
 
-`verifyRegistration` is called
+`verifyRegistration` is called.
 
 ### Event: 'verified'
-`function () { }`
 
-`verifyRegistration` successfully finished
+`verifyRegistration` successfully finished.
 
 ### Event: 'settingpassword'
-`function () { }`
 
-`setPassword` is called
+`setPassword` is called.
 
 ### Event: 'passwordset'
-`function () { }`
 
-`setPassword` successfully finished
+`setPassword` successfully finished.
 
 ### Event: 'error'
-`function (err) { }`
+* `Error`
 
 Emitted when any of the functions are called without a callback and there is an error.
 
 ### Event: 'notice'
-`function (text) { }`
+* `string` - Notice.
 
 Emitted when NickServ sends a notice.
 
 ### Event: 'send'
-`function (msg) { }`
+* `string` - Message.
 
 Emitted when client sends a message to NickServ through this module.
 
