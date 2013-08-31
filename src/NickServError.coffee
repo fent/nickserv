@@ -1,6 +1,6 @@
 {vsprintf} = require 'sprintf'
 
-# makes an irc error object and calls callback
+# Makes an irc error object and calls callback.
 module.exports = class NickServError
   constructor: (cb, type, notice, args = [], match) ->
     err = new Error vsprintf notice.error[type].msg, args
