@@ -1,4 +1,3 @@
-# dependencies
 {EventEmitter} = require 'events'
 
 test           = require './regex.js'
@@ -10,7 +9,7 @@ cmds           = require './cmds.js'
 
 class Nick extends EventEmitter
   constructor: (irc, @options = {}) ->
-    # custom functions for communicating
+    # Custom functions for communicating.
     listen = (notice) ->
       irc.on 'notice', (nick, to, text) ->
         if nick is 'NickServ'
@@ -22,8 +21,8 @@ class Nick extends EventEmitter
       irc.say 'NickServ', args
 
 
-    # emit notices by NickServ
-    # keep track of multi part notices
+    # Emit notices by NickServ.
+    # Keep track of multi part notices.
     blob = ''
     listen (text) =>
       blob += text + '\n'
@@ -31,35 +30,35 @@ class Nick extends EventEmitter
       @emit 'blob', blob
 
 
-    # keep track if this nick is registered/identified
+    # Keep track if this nick is registered/identified.
     registered = identified = false
     orignick = irc.nick
 
-    # reset on reconnects and nick changes
+    # Reset on reconnects and nick changes.
     irc.on 'registered', ->
       registered = identified = false
 
-    # reset on nick change
+    # Reset on nick change.
     irc.on 'nick', (oldnick, newnick) ->
       if oldnick is orignick
         orignick = newnick
         registered = identified = false
 
-    # only set registered on isRegistered check
+    # Only set registered on `isRegistered()` check
     # if nick checked is the same as the current nick
     @on 'isregistered', (result, nick) ->
       if nick is irc.nick
         registered = result
 
-    # a nick must be registered to be identifyable
+    # A nick must be registered to be identifyable.
     @on 'identified', ->
       identified = registered = true
 
     @on 'loggedout', ->
       identified = false
 
-    # when registered, the user is also identified
-    # identify does not need to be called
+    # When registered, the user is also identified.
+    # Identify does not need to be called.
     @on 'registered', ->
       identified = registered = true
 
@@ -68,20 +67,20 @@ class Nick extends EventEmitter
         identified = registered = false
 
 
-    # add a few extras to the irc object
-    # checks if irc object is connected
+    # Add a few extras to the irc object
+    # Checks if irc object is connected.
     irc.isConnected = ->
       irc.conn?.connected
 
 
-    # keep track of command aliases
+    # Keep track of command aliases.
     cmdState = {}
     for cmd of cmds
       cmdState[cmd] = 0
 
 
-    # default callback function will emit error event
-    # used only when callback isn't given
+    # Default callback function will emit error event.
+    # Used only when callback isn't given.
     dcb = (err) =>
       @emit 'error', err
 
@@ -96,7 +95,7 @@ class Nick extends EventEmitter
               @removeListener 'blob', wait
               blob = ''
 
-              # check for unknownCommand error
+              # Check for unknownCommand error
               if name is 'unknownCommand' and cmdState[cmd] isnt (cmds[cmd].length - 1)
                 cmdState[cmd]++
                 @nickserv cmd, task.args, task.cb, task.args2
@@ -118,9 +117,9 @@ class Nick extends EventEmitter
       false
 
 
-    # waits for NickServ to send notice with the right message
+    # Waits for NickServ to send notice with the right message
     # if called several times with the same command, will queue up
-    # commands listening to each's reply one by one
+    # commands listening to each's reply one by one.
     queues = {}
     nickserv = (cmd, args, cb, args2) =>
       queues[cmd] ?= queue((task, callback) =>
@@ -128,7 +127,7 @@ class Nick extends EventEmitter
           task.cb.apply(null, arguments)
           callback()
 
-        # will be called when nickserv sends message
+        # Will be called when nickserv sends message.
         wait = (text) ->
           if not checkError task, text, wait, newcb
             checkSuccess task.cmd, text, wait, newcb
@@ -137,63 +136,62 @@ class Nick extends EventEmitter
         @on 'blob', wait
       , 1)
 
-      # send nickserv command immediately but only listen to the reply
-      # to one of the same command at a time
+      # Send nickserv command immediately but only listen to the reply
+      # to one of the same command at a time.
       queues[cmd].push
-        cmd     : cmd
-        args    : args
-        cb      : cb
-        args2   : args2
+        cmd   : cmd
+        args  : args
+        cb    : cb
+        args2 : args2
 
       @send.apply @, [cmds[cmd][cmdState[cmd]]].concat args
 
 
-    # callback function is called when it's connected, identified,
+    # Callback function is called when it's connected, identified/registered.
     @ready = (cb = dcb, options = @options) ->
       connected = =>
-        # only check if nick is registered if the password is provided
-        # because with it we can identify/register
-        # some servers allow you to stay logged in without identifying
+        # Only check if nick is registered if the password is provided
+        # because with it we can identify/register.
+        # Some servers allow you to stay logged in without identifying.
         if options.password
           @isRegistered irc.nick, (err, registered) =>
-            # if it is registered and a password was provided,
-            # try to identify
+            # If it is registered, try to identify.
             if registered
               @identify options.password, cb
 
-            # if it's not registered and password and email were provided,
-            # attempt to register
+            # If it's not registered and email was provided too,
+            # attempt to register.
             else
               if options.email
                 @register options.password, options.email, cb
 
-              # return error if only one of them was given
+              # Return error if only one of them was given.
               else
                 new NickServError cb, 'notRegistered',
                   notices.isRegistered, [irc.nick]
 
-        # without password we can skip all this
+        # Without password we can skip all this.
         else
           cb()
 
 
-      # connect client if not connected
+      # Connect client if not connected.
       if irc.isConnected()
         connected()
       else
         irc.connect(connected)
 
 
-    # returns true if nick has beenn identified
+    # Returns true if nick has beenn identified.
     @isIdentified = ->
       identified
 
 
-    # check if nick is registered with nickserv
+    # Check if nick is registered with nickserv.
     @isRegistered = (nick, cb = dcb) ->
       @emit 'checkingregistered'
 
-      # if nick is not provided, not async version
+      # If nick is not provided, not async version.
       if not nick?
         return registered
 
@@ -207,7 +205,7 @@ class Nick extends EventEmitter
         cb null, registered
 
     
-    # gets a bunch of info for a nick
+    # Gets a bunch of info for a nick.
     @info = (nick = irc.nick, cb = dcb) ->
       @emit 'gettinginfo'
 
@@ -218,7 +216,7 @@ class Nick extends EventEmitter
       newcb = (err, result) =>
         return cb err if err
 
-        # make info object
+        # Make info object.
         info =
           nick: result[1]
           realname: result[2]
@@ -243,14 +241,14 @@ class Nick extends EventEmitter
       nickserv 'info', [nick, 'all'], newcb, [nick]
 
 
-    # identifies a nick calls cb on success or failure with err arg
+    # Identifies a nick calls cb on success or failure with err arg.
     @identify = (password = @options.password, cb = dcb) ->
       @emit 'identifying'
 
       if @isIdentified()
         return new NickServError cb, 'alreadyIdentified', notices.identify
 
-      # check password is correct length, doesnt contain white space
+      # Check password is correct length, doesnt contain white space.
       if test.password(password)
         return new NickServError cb, 'invalidPassword', notices.identify,
           [password]
@@ -276,8 +274,8 @@ class Nick extends EventEmitter
       nickserv 'logout', [], newcb
 
 
-    # register current nick with NickServ
-    # calls cb on success or failure with err arg
+    # Register current nick with NickServ.
+    # Calls cb on success or failure with err arg.
     @register = (password = @options.password, email = @options.email, cb = dcb) ->
       @emit 'registering'
 
@@ -286,7 +284,7 @@ class Nick extends EventEmitter
       if @isRegistered()
         return new NickServError cb, 'alreadyRegistered', notices.register
 
-      # first check password and email
+      # First check password and email.
       if test.password(password)
         return new NickServError cb, 'invalidPassword', notices.register,
           [password]
@@ -310,7 +308,7 @@ class Nick extends EventEmitter
       nickserv 'register', [password, email], newcb, [email]
 
 
-    # drops a nick from your group and lets other register it
+    # Drops a nick from your group and lets other register it.
     @drop = (nick = irc.nick, cb = dcb) ->
       @emit 'dropping'
 
@@ -327,7 +325,7 @@ class Nick extends EventEmitter
       nickserv 'drop', [nick], newcb, [nick]
 
 
-    # verify nick with a code sent through email
+    # Verify nick with a code sent through email.
     @verify = (nick, key, cb = dcb) ->
       @emit 'verifying'
 
@@ -349,7 +347,7 @@ class Nick extends EventEmitter
       nickserv 'verify', [nick, key], newcb, [nick]
 
 
-    # changes current nick's password
+    # Changes current nick's password.
     @setPassword = (password, cb = dcb) ->
       @emit 'settingpassword'
 
@@ -367,7 +365,7 @@ class Nick extends EventEmitter
       nickserv 'setPassword', [password], newcb, [password]
 
 
-# export
+# Export.
 module.exports =
   NickServ: Nick
   create: (client, options) ->
