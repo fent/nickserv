@@ -1,8 +1,8 @@
 # NickServ notices
-# notices can be different based on server
-# debug mode can be turned on to observe nickserv notices
-# and find out exactly what message they send after each command
-# then it's just a matter of adding it to the list of matches
+# Notices can be different based on server.
+# Debug mode can be turned on to observe nickserv notices
+# and find out exactly what message they send after each command.
+# Then it's just a matter of adding it to the list of matches.
 
 module.exports =
   identify:
