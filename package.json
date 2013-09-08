@@ -16,13 +16,13 @@
     "lib": "./lib"
   },
   "dependencies": {
-    "sprintf": "0.1.x"
+    "sprintf": "~0.1.1"
   },
   "devDependencies": {
-    "irc": "0.3.x",
+    "irc": "~0.3.3",
+    "optimist": "~0.2.8",
     "vows": "0.5.x",
-    "optimist": "0.2.x",
-    "mkdirp": "0.3.x"
+    "writestreamp": "~0.1.0"
   },
   "licenses": [ {
     "type": "MIT",
