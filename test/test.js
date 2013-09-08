@@ -1,52 +1,52 @@
-var vows = require('vows')
-  ,    l = require('optimist').argv.logic
-  ,    v = require('optimist').argv.verify
-  ;
+var vows = require('vows');
+var util = require('./util');
+var l    = require('optimist').argv.logic;
+var v    = require('optimist').argv.verify;
+var t    = require('./setup.js');
 
-require('./setup.js');
 
-
-// keep track of registered user
+// Keep track of registered user.
+var nick = util.uniqueNick();
 var user = {
-  nick: uniqueNick(),
+  nick: nick,
   password: 'hunter2',
-  password2: 'acceptable'
+  password2: 'acceptable',
+  email: nick + '@mailinator.com',
 };
-user.email = user.nick + '@mailinator.com';
-var user2 = uniqueNick();
+var nick2 = util.uniqueNick();
 
 
-// register a nick to be able to test the rest of the functions
+// Register a nick to be able to test the rest of the functions.
 vows.describe('register')
   .addBatch({
     'Register': {
       'using a bad email':
-        logic(register('Invalid Email', uniqueNick(),
+        util.logic(t.register('Invalid Email', util.uniqueNick(),
           ['tricky34', 'bad@email'])),
 
       'using a password that is too short':
-        logic(register('Invalid Password', uniqueNick(),
+        util.logic(t.register('Invalid Password', util.uniqueNick(),
           ['no', 'hi@mail.com'])),
 
       /*
       // some irc servers don't return an error for this
       'using a password that is too long':
-        register('Invalid Parameters', uniqueNick(),
+        t.register('Invalid Parameters', util.uniqueNick(),
           ['looooooooooooooooooooooooooooooooooooooooong', 'hi@mail.com']),
       */
 
       'a nick to use in the next few tests':
-        logic(register.register('Already Identified', user.nick,
+        util.logic(t.register.register('Already Identified', user.nick,
             [user.password, user.email],
             [user.password, user.email]),
-          register.success(user.nick,
+          t.register.success(user.nick,
             [user.password, user.email]))
     }
   })
   .addBatch({
     'Register': {
       'after identifying':
-        logic(identify.register('Already Identified', user.nick,
+        util.logic(t.identify.register('Already Identified', user.nick,
           [user.password],
           [user.password, user.email]))
     }
@@ -54,7 +54,7 @@ vows.describe('register')
   .addBatch({
     'Register': {
       'after checking if nick is registered':
-        logic(isRegistered.register('Already Registered', user.nick,
+        util.logic(t.isRegistered.register('Already Registered', user.nick,
           [user.nick, true],
           ['whateva', user.email]))
     }
@@ -62,7 +62,7 @@ vows.describe('register')
   .addBatch({
     'Register': {
       'the same nick again':
-        register('Already Registered', user.nick,
+        t.register('Already Registered', user.nick,
           [user.password, user.email])
     }
   })
@@ -74,23 +74,23 @@ vows.describe('info')
   .addBatch({
     'Get info': {
       'from a bad nick':
-        logic(info('Invalid Nick', uniqueNick(),
+        util.logic(t.info('Invalid Nick', util.uniqueNick(),
           ['no has'])),
 
       'from a nonregistered nick':
-        info('Not Registered', uniqueNick(),
-          [uniqueNick()]),
+        t.info('Not Registered', util.uniqueNick(),
+          [util.uniqueNick()]),
       
       'from NickServ':
-        info('Network Services', uniqueNick(),
+        t.info('Network Services', util.uniqueNick(),
           ['NickServ']),
 
       'from the nick we registered':
-        info.success(uniqueNick(),
+        t.info.success(util.uniqueNick(),
           [user.nick]),
 
       'from the nick we registered but identify first':
-        identify.info.success(user.nick,
+        t.identify.info.success(user.nick,
           [user.password],
           [user.nick])
     }
@@ -103,15 +103,15 @@ vows.describe('isRegistered')
   .addBatch({
     'Check': {
       'a nick that cant exist':
-        logic(isRegistered('Invalid Nick', uniqueNick(),
+        util.logic(t.isRegistered('Invalid Nick', util.uniqueNick(),
           ['bad nick'])),
       
       'a nick that does not exist yet':
-        isRegistered.success(uniqueNick(),
-          [uniqueNick(), false]),
+        t.isRegistered.success(util.uniqueNick(),
+          [util.uniqueNick(), false]),
       
       'the nick we registered':
-        isRegistered.success(uniqueNick(),
+        t.isRegistered.success(util.uniqueNick(),
           [user.nick, true])
     }
   })
@@ -126,15 +126,15 @@ vows.describe('identify')
   .addBatch({
     'Identify': {
       'a nick that is not registered':
-        identify('Not Registered', uniqueNick(),
+        t.identify('Not Registered', util.uniqueNick(),
           ['hunter2']),
 
       'using a password that cannot be registered with':
-        logic(identify('Invalid Password', uniqueNick(),
+        util.logic(t.identify('Invalid Password', util.uniqueNick(),
           ['no'])),
 
       'twice in a row':
-        logic(identify.identify('Already Identified', user.nick,
+        util.logic(t.identify.identify('Already Identified', user.nick,
           [user.password],
           [user.password]))
     }
@@ -142,14 +142,14 @@ vows.describe('identify')
   .addBatch({
     'Identify': {
       'using the wrong password':
-        identify('Wrong Password', user.nick,
+        t.identify('Wrong Password', user.nick,
           ['WRONG'])
     }
   })
   .addBatch({
     'Identify': {
       'the nick we registered with the correct password':
-        identify.success(user.nick,
+        t.identify.success(user.nick,
           [user.password])
     }
   })
@@ -161,11 +161,11 @@ vows.describe('logout')
   .addBatch({
     'Log out': {
       'without logging in':
-        logic(logout('Not Identified', uniqueNick(),
+        util.logic(t.logout('Not Identified', util.uniqueNick(),
           [])),
 
       'by first identifying':
-        identify.logout.success(user.nick,
+        t.identify.logout.success(user.nick,
           [user.password],
           [])
     }
@@ -179,11 +179,11 @@ if (v) {
     .addBatch({
       'Verify registration': {
         'without identifying first':
-          logic(verify('Not Identified', uniqueNick(),
-            [uniqueNick(), 'anything'])),
+          util.logic(t.verify('Not Identified', util.uniqueNick(),
+            [util.uniqueNick(), 'anything'])),
 
         'providing an empty key':
-          logic(identify.verify('Invalid Key', user.nick,
+          util.logic(t.identify.verify('Invalid Key', user.nick,
             [user.password],
             ['somenick', '']))
       }
@@ -191,7 +191,7 @@ if (v) {
     .addBatch({
       'Verify registration': {
         'providing a nick that cannot exist':
-          logic(identify.verify('Invalid Nick', user.nick,
+          util.logic(t.identify.verify('Invalid Nick', user.nick,
             [user.password],
             ['nick with spaces', 'code23332d']))
       }
@@ -199,15 +199,15 @@ if (v) {
     .addBatch({
       'Verify registration': {
         'of a nick that is not registered':
-          identify.verify('Not Registered', user.nick,
+          t.identify.verify('Not Registered', user.nick,
             [user.password],
-            [uniqueNick(), 'key'])
+            [util.uniqueNick(), 'key'])
       }
     })
     .addBatch({
       'Verify registration': {
         'with the wrong key':
-          identify.verify('Wrong Key', user.nick,
+          t.identify.verify('Wrong Key', user.nick,
             [user.password],
             [user.nick, 'thiskeyiswrong'])
       }
@@ -239,11 +239,11 @@ vows.describe('setPassword')
   .addBatch({
     'Set the password': {
       'without identifying first':
-        logic(setPassword('Not Identified', uniqueNick(),
+        util.logic(t.setPassword('Not Identified', util.uniqueNick(),
           ['doesntmatter'])),
 
       'to one that is too short':
-        logic(identify.setPassword('Invalid Password', user.nick,
+        util.logic(t.identify.setPassword('Invalid Password', user.nick,
           [user.password],
           ['no']))
     }
@@ -252,7 +252,7 @@ vows.describe('setPassword')
   .addBatch({
     'Set the password': {
       'to one that is too long':
-        identify.setPassword('Invalid Parameters', user.nick,
+        t.identify.setPassword('Invalid Parameters', user.nick,
           [user.password],
           ['looooooooooooooooooooooooooooooooooooooooooooong'])
     }
@@ -261,7 +261,7 @@ vows.describe('setPassword')
   .addBatch({
     'Set the password': {
       'to another acceptable password':
-        identify.setPassword.success(user.nick,
+        t.identify.setPassword.success(user.nick,
           [user.password],
           [user.password2])
     }
@@ -276,22 +276,22 @@ if (l) {
     .addBatch({
       'Call ready': {
         'without any options':
-          ready(uniqueNick(), {}, [], ['checkingregistered']),
+          t.ready(util.uniqueNick(), {}, [], ['checkingregistered']),
 
         'with a correct password for a registered nick':
-          ready(user.nick, { password: 'acceptable' },
+          t.ready(user.nick, { password: 'acceptable' },
             ['checkingregistered', 'isregistered', 'identifying',
              'identified'],
             ['registering']),
 
         'with a password for a non registered nick':
-          ready(uniqueNick(), { password: user.password },
+          t.ready(util.uniqueNick(), { password: user.password },
             ['checkingregistered', 'isregistered'],
             ['identifying', 'registering'],
             'Not Registered'),
 
         'with a password and email for a non registered nick':
-          ready(uniqueNick(),
+          t.ready(util.uniqueNick(),
             { password: user.password, email: user.email },
             ['checkingregistered', 'isregistered', 'registering',
              'registered'],
@@ -307,11 +307,11 @@ vows.describe('drop')
   .addBatch({
     'Drop': {
       'without identifying first':
-        logic(drop('Not Identified', uniqueNick(),
-          [uniqueNick()])),
+        util.logic(t.drop('Not Identified', util.uniqueNick(),
+          [util.uniqueNick()])),
       
       'a badly made up nick':
-        logic(identify.drop('Invalid Nick', user.nick,
+        util.logic(t.identify.drop('Invalid Nick', user.nick,
           [user.password2],
           ['!welp'])),
     }
@@ -319,15 +319,15 @@ vows.describe('drop')
   .addBatch({
     'Drop': {
       'a nick that is not registered':
-        identify.drop('Not Registered', user.nick,
+        t.identify.drop('Not Registered', user.nick,
           [user.password2],
-          [uniqueNick()])
+          [util.uniqueNick()])
     }
   })
   .addBatch({
     'Drop': {
       'a nick that does not belong to us or our group':
-        register.drop('Access Denied', user2,
+        t.register.drop('Access Denied', nick2,
           [user.password, user.email],
           [user.nick])
     }
@@ -335,13 +335,13 @@ vows.describe('drop')
   .addBatch({
     'Drop': {
       'the one nick these tests registered':
-        identify.drop.success(user.nick,
+        t.identify.drop.success(user.nick,
           [user.password2],
           [user.nick]),
       'the nick used to test dropping not in our group':
-        identify.drop.success(user2,
+        t.identify.drop.success(nick2,
           [user.password],
-          [user2])
+          [nick2])
     }
   })
   .export(module);

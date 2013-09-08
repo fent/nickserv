@@ -1,208 +1,88 @@
-var fs     = require('fs')
-  , path   = require('path')
-  , assert = require('assert')
-  , http   = require('http')
-
-  , mkdirp   = require('mkdirp')
-  , irc      = require('irc')
-  , nickserv = require('..')
-
-  , server     = require('optimist').argv.server || null
-  , l          = require('optimist').argv.logic
-  , existsSync = fs.existsSync || path.existsSync
-  ;
+var assert    = require('assert');
+var util      = require('./util');
+var createBot = require('./bot');
 
 
-// mock the irc module if logic is set
-var irc = require(server === null ? './mock/irc' : 'irc');
+function error(type, nick, fn, args) {
+  var obj = {
+    topic: function(bot) {
+      var cb = this.callback;
 
-// if logic is set, more tests will run that will test the functionality
-// of the program where it doesn't need to send anything to NickServ
-// this helps avoid excesive connections to an irc server when testing
-global.logic = l ? function(o) {
-  return o;
-}
-: function(o, a) {
-  return a || {};
-};
-
-
-// converst str to cammel case
-// thank you: tjholowaychuk
-function camelcase(str) {
-  var parts = str.toLowerCase().split(/\s+/);
-  var buf = parts.shift();
-  return buf + parts.map(function(part){
-    return part[0].toUpperCase() + part.slice(1);
-  }).join('');
-}
-
-
-// add NickServError type checking to assert
-assert.type = function(errtype, nick) {
-  errtype = camelcase(errtype);
-  return function(n, err, bot) {
-    assert.equal(nick, bot.nick);
-    assert.ok(err);
-    assert.include(err, 'type');
-    assert.equal(err.type, errtype);
-  };
-};
-
-
-var table = {};
-// returns a unique nick that probably isnt being used
-global.uniqueNick = function() {
-  var nick;
-  do {
-    nick = 'nickbot' + Math.floor(Math.random() * 100000);
-  } while(table[nick] !== undefined);
-
-  table[nick] = true;
-  return nick;
-};
-
-// macros
-var createBot = function(type, nick, fn, log, options) {
-    // make server folder if it doesn't exist
-    var dir = path.join(__dirname, 'logs', server || 'null', fn);
-
-    // append txt to file
-    var fd, append = function(txt) {
-      if (!fd) {
-        if (!existsSync(dir)) {
-          mkdirp.sync(dir);
-        }
-
-        // create log file only if append is called at least once
-        fd = fs.openSync(dir + '/' + type + '.log', 'w', 0744);
-      }
-      var buffer = new Buffer(txt + '\n');
-      fs.writeSync(fd, buffer, 0, buffer.length);
-    };
-
-    // create irc client instance
-    var bot = new irc.Client(server, nick, {
-      autoConnect: false,
-      debug: false
-    });
-    bot.log = log !== undefined ? log : true;
-    //bot.log = true
-
-    // attach nickserv object to client
-    nickserv.create(bot, options);
-
-    // log all notices
-    bot.nickserv.on('notice', function(msg) {
-      if (bot.log) {
-        append('NickServ: ' + msg);
-      }
-    });
-
-    // log what the bot tells nickserv
-    bot.nickserv.on('send', function(msg) {
-      if (bot.log) {
-        append(bot.nick + ': ' + msg);
-      }
-    });
-
-    // when this bot disconnect, close log file
-    bot.kill = function(cb) {
-      var args = Array.prototype.slice.call(arguments).slice(1);
-      bot.disconnect(function() {
-        setTimeout(function() {
-          cb.apply(null, args);
-        }, 100);
+      args.push(function(err) {
+        bot.kill(cb, null, err, bot);
       });
-      if (fd) {
-        fs.close(fd);
-      }
-    };
 
-    return bot;
-  },
-
-  error = function(type, nick, fn, args) {
-    var obj = {
-      topic: function(bot) {
-        var cb = this.callback;
-
-        args.push(function(err) {
-          bot.kill(cb, null, err, bot);
-        });
-
-        if (!bot) {
-          bot = createBot(type, nick, fn);
-          bot.connect(function() {
-            bot.nickserv[fn].apply(bot.nickserv, args);
-          });
-        } else {
+      if (!bot) {
+        bot = createBot(type, nick, fn);
+        bot.connect(function() {
           bot.nickserv[fn].apply(bot.nickserv, args);
-        }
-      }
-    };
-    obj[type] = assert.type(type, nick);
-    return obj;
-  },
-
-  success = function(nick, fn, args, realType, realFn) {
-    return {
-      topic: function(bot) {
-        var cb = this.callback;
-
-        args.push(function(err) {
-          bot.log = true;
-          if (!realType) {
-            bot.kill(cb, err, bot);
-          } else {
-            cb(err, bot);
-          }
         });
-
-        if (!bot) {
-          bot = createBot(realType || 'Success', nick, realFn || fn,
-              realType ? false : true);
-          bot.connect(function() {
-            bot.nickserv[fn].apply(bot.nickserv, args);
-          });
-        } else {
-          bot.nickserv[fn].apply(bot.nickserv, args);
-        }
-      },
-      'Success': function(err, bot) {
-        assert.equal(nick, bot.nick);
-        assert.isTrue(!err, err ? err.message : undefined);
+      } else {
+        bot.nickserv[fn].apply(bot.nickserv, args);
       }
-    };
-  },
-  functions = ['register', 'verify', 'isRegistered', 'info',
-               'identify', 'logout', 'setPassword', 'drop'],
-  first = {
-    'identify': ['register', 'verify', 'identify', 'setPassword', 'info',
-                 'logout', 'drop'],
-    'register': ['register', 'drop'],
-    'isRegistered': ['register']
+    }
   };
-
-// make shortcuts for macros
-for (var i in functions) {
-  (function(fn) {
-    global[fn] = function(type, nick, args) {
-      return error(type, nick, fn, args);
-    };
-
-    global[fn].success = function(nick, args, realType, realFn) {
-      return success(nick, fn, args, realType, realFn);
-    };
-  })(functions[i]);
+  obj[type] = util.type(type, nick);
+  return obj;
 }
 
-// special case for isRegistered since it doesn't return an error
-isRegistered.success = function(nick, args, realType, realFn) {
-  var bot,
-      checknick = args[0],
-      registered = args[1];
-      type = registered ? 'Registered' : 'Not Registered';
+function success(nick, fn, args, realType, realFn) {
+  return {
+    topic: function(bot) {
+      var cb = this.callback;
+
+      args.push(function(err) {
+        bot.log = true;
+        if (!realType) {
+          bot.kill(cb, err, bot);
+        } else {
+          cb(err, bot);
+        }
+      });
+
+      if (!bot) {
+        bot = createBot(realType || 'Success', nick, realFn || fn,
+            realType ? false : true);
+        bot.connect(function() {
+          bot.nickserv[fn].apply(bot.nickserv, args);
+        });
+      } else {
+        bot.nickserv[fn].apply(bot.nickserv, args);
+      }
+    },
+    'Success': function(err, bot) {
+      assert.equal(nick, bot.nick);
+      assert.isTrue(!err, err ? err.message : undefined);
+    }
+  };
+}
+
+var functions = ['register', 'verify', 'isRegistered', 'info',
+               'identify', 'logout', 'setPassword', 'drop'];
+var first = {
+  'identify': ['register', 'verify', 'identify', 'setPassword', 'info',
+               'logout', 'drop'],
+  'register': ['register', 'drop'],
+  'isRegistered': ['register']
+};
+
+// Make shortcuts for macros.
+functions.forEach(function(fn) {
+  exports[fn] = function(type, nick, args) {
+    return error(type, nick, fn, args);
+  };
+
+  exports[fn].success = function(nick, args, realType, realFn) {
+    return success(nick, fn, args, realType, realFn);
+  };
+});
+
+// Special case for isRegistered since it doesn't return an error.
+exports.isRegistered.success = function(nick, args, realType, realFn) {
+  var bot;
+  var checknick = args[0];
+  var registered = args[1];
+  var type = registered ? 'Registered' : 'Not Registered';
   var obj = {
     topic: function() {
       var cb = this.callback;
@@ -231,67 +111,61 @@ isRegistered.success = function(nick, args, realType, realFn) {
 };
 
 
-// special case for functions where they need
-// to be identified first before they can be used
-for (var k in first) {
-  (function(fn1) {
-    for (var j in first[fn1]) {
-      (function(fn2) {
-        global[fn1][fn2] = function(type, nick, args1, args2) {
-          var obj = global[fn1].success(nick, args1, type, fn2);
-          if (fn1 === 'identify') {
-            obj.Identified = obj.Success;
-            delete obj.Success;
-          } else if (fn1 === 'register') {
-            obj.Registered = obj.Success;
-            delete obj.Success;
-          }
+// Special case for functions where they need
+// to be identified first before they can be used.
+Object.keys(first).forEach(function(fn1) {
+  first[fn1].forEach(function(fn2) {
+    exports[fn1][fn2] = function(type, nick, args1, args2) {
+      var obj = exports[fn1].success(nick, args1, type, fn2);
+      if (fn1 === 'identify') {
+        obj.Identified = obj.Success;
+        delete obj.Success;
+      } else if (fn1 === 'register') {
+        obj.Registered = obj.Success;
+        delete obj.Success;
+      }
 
-          obj[''] = global[fn2](type, nick, args2);
-          return obj;
-        };
+      obj[''] = exports[fn2](type, nick, args2);
+      return obj;
+    };
 
-        global[fn1][fn2].success = function(nick, args1, args2) {
-          var obj = global[fn1].success(nick, args1, fn1 + '-Success', fn2);
-          if (fn1 === 'identify') {
-            obj.Identified = obj.Success;
-            delete obj.Success;
-          } else if (fn1 === 'register') {
-            obj.Registered = obj.Success;
-            delete obj.Success;
-          }
+    exports[fn1][fn2].success = function(nick, args1, args2) {
+      var obj = exports[fn1].success(nick, args1, fn1 + '-Success', fn2);
+      if (fn1 === 'identify') {
+        obj.Identified = obj.Success;
+        delete obj.Success;
+      } else if (fn1 === 'register') {
+        obj.Registered = obj.Success;
+        delete obj.Success;
+      }
 
-          obj[''] = global[fn2].success(nick, args2);
-          return obj;
-        };
-      })(first[fn1][j]);
-    }
-  })(k);
-}
+      obj[''] = exports[fn2].success(nick, args2);
+      return obj;
+    };
+  });
+});
 
 
-// custom macro function for testing control flow in ready() function
-global.ready = function(nick, options, emit, dontemit, type) {
-  // setup flow object to keep track of what gets emitted
-  var emitters = emit.concat(dontemit),
-        events = {};
-  for (var e in emitters) {
-    events[emitters[e]] = false;
-  }
+// Custom macro function for testing control flow in ready() function.
+exports.ready = function(nick, options, emit, dontemit, type) {
+  // Setup flow object to keep track of what gets emitted.
+  var emitters = emit.concat(dontemit);
+  var events = {};
+  emitters.forEach(function(event) {
+    events[event] = false;
+  });
 
   var obj = {
     topic: function() {
-      var cb = this.callback,
-         bot = createBot(type || emitters[emitters.length - 1],
-                 nick, 'ready', true, options);
+      var cb = this.callback;
+      var bot = createBot(type || emitters[emitters.length - 1],
+        nick, 'ready', true, options);
 
-      for (var e in emitters) {
-        (function(event) {
-          bot.nickserv.once(event, function() {
-            events[event] = true;
-          });
-        })(emitters[e]);
-      }
+      emitters.forEach(function(event) {
+        bot.nickserv.once(event, function() {
+          events[event] = true;
+        });
+      });
       bot.nickserv.ready(function(err) {
         bot.kill(cb, null, err, bot);
       });
@@ -299,7 +173,7 @@ global.ready = function(nick, options, emit, dontemit, type) {
   };
 
   if (type) {
-    obj[type] = assert.type(type, nick);
+    obj[type] = util.type(type, nick);
   } else {
     obj.Ready = function(n, err, bot) {
       assert.equal(nick, bot.nick);
@@ -307,21 +181,17 @@ global.ready = function(nick, options, emit, dontemit, type) {
     };
   }
 
-  for (var e in emit) {
-    (function(event) {
-      obj['Emitted: ' + event] = function() {
-        assert.isTrue(events[event]);
-      };
-    })(emit[e]);
-  }
+  emit.forEach(function(event) {
+    obj['Emitted: ' + event] = function() {
+      assert.isTrue(events[event]);
+    };
+  });
 
-  for (var e in dontemit) {
-    (function(event) {
-      obj['Did Not Emit: ' + event] = function() {
-        assert.isFalse(events[event]);
-      };
-    })(dontemit[e]);
-  }
+  dontemit.forEach(function(event) {
+    obj['Did Not Emit: ' + event] = function() {
+      assert.isFalse(events[event]);
+    };
+  });
 
   return obj;
 };

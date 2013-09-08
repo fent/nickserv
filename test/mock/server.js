@@ -1,6 +1,6 @@
 var NickServ = require('./client/nickserv');
 
-module.exports = Server = function(motd) {
+var Server = module.exports = function(motd) {
   this.motd = motd;
   this.users = {};
   this.channels = {};
@@ -18,6 +18,7 @@ Server.prototype.connect = function(client) {
   this.NickServ.userConnected(nick, client);
 
   if (this.users[nick] !== undefined) {
+    var newnick, newnickLower;
     do {
       newnick = 'Guest' + Math.floor(Math.random() * 100000);
       newnickLower = newnick.toLowerCase();
@@ -42,8 +43,10 @@ Server.prototype.connect = function(client) {
     }
     delete self.users[nick];
     self.NickServ.userDisconnected(nick, msg);
-    client.emit('end');
-    cb();
+    process.nextTick(function() {
+      client.emit('end');
+      cb();
+    });
   };
 
   var event = nick === 'nickserv' ? 'notice' : 'message';
@@ -53,12 +56,12 @@ Server.prototype.connect = function(client) {
     process.nextTick(function() {
       if (dest.charAt(0) === '#') {
         if (self.channels[dest]) {
-          var chan = serlf.channels[dest];
+          var chan = self.channels[dest];
 
-          for (var i in chan.users) {
-            chan.users[i].client.emit(event, oriNick, chan.name, msg);
-            chan.users[i].client.emit('message' + chan.name, oriNick, msg);
-          }
+          Object.keys(chan.users).forEach(function(nick) {
+            chan.users[nick].client.emit(event, oriNick, chan.name, msg);
+            chan.users[nick].client.emit('message' + chan.name, oriNick, msg);
+          });
         }
 
       } else if (self.users[dest] !== undefined) {
