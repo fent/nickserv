@@ -1,20 +1,19 @@
-var NickServ = require('./client/nickserv');
+var Nickie = require('nickie');
 
 var Server = module.exports = function(motd) {
   this.motd = motd;
   this.users = {};
   this.channels = {};
-  this.NickServ = new NickServ();
+  this.NickServ = new Nickie();
   this.connect(this.NickServ);
 };
 
 Server.prototype.connect = function(client) {
-  var self = this
-    , oriNick = (client.nick || client.opt.nick)
-    , nick = oriNick.toLowerCase()
-    ;
+  var self = this;
+  var oriNick = (client.nick || client.opt.nick);
+  var nick = oriNick.toLowerCase();
 
-  // tell NickServ someone connected
+  // Tell NickServ someone connected.
   this.NickServ.userConnected(nick, client);
 
   if (this.users[nick] !== undefined) {

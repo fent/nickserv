@@ -1,7 +1,6 @@
-var mw = require('./middleware.js')
-  , errors = require('./replies.js').errors
-  , success = require('./replies.js').success
-  ;
+var mw = require('./middleware.js');
+var errors = require('./replies.js').errors;
+var success = require('./replies.js').success;
 
 
 exports.info = [
@@ -69,7 +68,7 @@ exports.drop = [
 
   function(next, nick, target) {
     this.store.drop(nick, target, function() {
-      next(success.drop, target || nick)
+      next(success.drop, target || nick);
     });
   }
 ];
