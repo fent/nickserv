@@ -1,12 +1,12 @@
-var EventEmitter = require('events').EventEmitter
-            util = require('util'),
-       IRCServer = require('./server');
+var EventEmitter = require('events').EventEmitter;
+var util         = require('util');
+var IRCServer    = require('./server');
 
 
 var servers = {};
 
 
-exports.Client = Client = function(server, nick, options) {
+var Client = exports.Client = function(server, nick) {
   this.server = server;
   this.nick = nick;
 };
