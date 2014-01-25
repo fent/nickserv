@@ -20,6 +20,7 @@
   },
   "devDependencies": {
     "irc": "~0.3.3",
+    "nickie": "~0.1.0",
     "optimist": "~0.2.8",
     "vows": "0.5.x",
     "writestreamp": "~0.1.0"
