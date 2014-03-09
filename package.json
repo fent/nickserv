@@ -21,8 +21,8 @@
   "devDependencies": {
     "irc": "~0.3.3",
     "nickie": "~0.1.0",
-    "optimist": "~0.2.8",
-    "vows": "0.5.x",
+    "optimist": "~0.6.1",
+    "vows": "~0.7.0",
     "writestreamp": "~0.1.0"
   },
   "licenses": [ {
