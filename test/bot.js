@@ -1,6 +1,6 @@
 var wsp      = require('writestreamp');
 var path     = require('path');
-var nickserv = require('..');
+var NickServ = require('..');
 var server   = require('optimist').argv.server || null;
 
 // Mock the irc module if no server given.
@@ -32,7 +32,9 @@ module.exports = function createBot(type, nick, fn, log, options) {
   //bot.log = true
 
   // Attach nickserv object to client.
-  nickserv.create(bot, options);
+  var nickserv = new NickServ(nick, options);
+  nickserv.attach('irc', bot);
+  bot.nickserv = nickserv;
 
   // Log all notices.
   bot.on('notice', function(nick, to, text, msg) {
@@ -51,12 +53,18 @@ module.exports = function createBot(type, nick, fn, log, options) {
   // When this bot disconnect, close log file.
   bot.kill = function(cb) {
     var args = Array.prototype.slice.call(arguments).slice(1);
-    bot.disconnect(function() {
+    if (bot.disconnect) {
+      bot.disconnect(onDisconnect);
+    } else {
+      onDisconnect();
+    }
+
+    function onDisconnect() {
       ws.once('finish', function() {
         cb.apply(null, args);
       });
       ws.end();
-    });
+    }
   };
 
   return bot;

@@ -212,11 +212,10 @@ if (v) {
             [user.nick, 'thiskeyiswrong'])
       }
     })
-    /*
     .addBatch({
       'Verify registration': {
         'of the nick we registered with the right key':
-          identify.verify.success(user.nick,
+          t.identify.verify.success(user.nick,
             [user.password],
             [user.nick, user.key])
       }
@@ -224,12 +223,11 @@ if (v) {
     .addBatch({
       'Verify registration': {
         'with a nick that is already verified':
-          identify.verify('Not Awaiting', user.nick,
+          t.identify.verify('Not Awaiting', user.nick,
             [user.password],
             [user.nick, user.key])
       }
     })
-    */
     .export(module);
 }
 

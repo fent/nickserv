@@ -1,30 +1,28 @@
 # nickserv [![Build Status](https://secure.travis-ci.org/fent/nickserv.png)](http://travis-ci.org/fent/nickserv)
 
-This is a node.js module that communicates with the Nick Service in irc servers.
+Provides shortcuts for communicating with NickServ in irc servers.
 
 
 # Usage
 
 ```javascript
-var nickserv = require('nickserv'),
-         irc = require('irc');
+var irc = require('irc');
+var NickServ = require('nickserv');
 
-// initialize irc client
+// Initialize irc client.
 var client = new irc.Client('irc.freenode.net', 'mynick');
 
-// this will create a new nickserv object on the irc client
-// with the provided options
-// that can be used to talk with the nickserv service
-nickserv.create(client, {
+// Use nickserv to handle communication between
+var nickserv = new NickServ('mynick', {
   password: 'hunter2',
   email: 'my@mail.com'
 });
 
+nickserv.attach('irc', client);
+
 // callback will get called when nick is identified/registered
-// will connect the irc client if not already connected
-client.nickserv.ready(function(err) {
-  if (err)
-    throw err;
+nickserv.ready(function(err) {
+  if (err) throw err;
   console.log('I am ready!');
   client.join('#channel');
 });
@@ -156,11 +154,6 @@ The nickserv object emits a handful events to help you track what it's currently
 ### Event: 'passwordset'
 
 `setPassword()` successfully finished.
-
-### Event: 'error'
-* `Error`
-
-Emitted when any of the functions are called without a callback and there is an error.
 
 ### Event: 'notice'
 * `string` - Notice.
