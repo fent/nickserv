@@ -33,18 +33,22 @@ The cool thing about the `ready` function is that if a password is provided, it 
 
 # API
 
-### nickserv.create( client, [options])
-Creates a new NickServ instance and attaches it to the `client` under the key `nickserv`. `options` can be a hash with `password` and `email` that can optionally be used later with `identify`, `register`, and the `ready` functions.
+### new NickServ(nick, [options])
+
+`options` can be a hash with `password` and `email` that can optionally be used later with `identify`, `register`, and the `ready` functions.
 
 Nickserv has functions that help communicate with the IRC NickServ service. If a function is called several times in a row, the nickserv command will be sent as soon as it's called, but it will queue the responses to the corresponding commands.
 
-### client.nickserv.isIdentified()
+### NickServ#isIdentified()
+
 Returns wether or not the current nick has been identified.
 
-### client.nickserv.isRegistered([nick], [callback(err, registered)])
+### NickServ#isRegistered([nick], [callback(err, registered)])
+
 Checks if the given nick is registered. If no arguments passed, it becomes synchronous and returns wether or not the current nick is registered. Note that synchronous version relies on knowing if `isRegistered()`, `identify()`, or `register()` have already been called.
 
-### client.nickserv.info([nick], [callback(err, info)])
+### NickServ#info([nick], [callback(err, info)])
+
 Gets info from the given nick. If `nick` is not given, uses current client nick. `info` object looks like
 
     {
@@ -57,30 +61,37 @@ Gets info from the given nick. If `nick` is not given, uses current client nick.
       email: 'nick@gmail.com',
       options: ['Security', 'Private', 'Auto-op']
     }
-      
 
-### client.nickserv.identify(password, [callback(err)])
+### NickServ#identify(password, [callback(err)])
+
 Identifies current client nick with the given password.
 
-### client.nickserv.logout([callback(err)])
+### NickServ#logout([callback(err)])
+
 Reverses the effect of `identify()`.
 
-### client.nickserv.register(password, email, [callback(err)])
+### NickServ#register(password, email, [callback(err)])
+
 Registers the current client nick with the given password and email. Some servers require you to be using your nick for some time before it can be registered. In that case, `register()` will wait and call itself again.
 
-### client.nickserv.drop([nick], [callback(err)])
+### NickServ#drop([nick], [callback(err)])
+
 Drops a nick, making it available to be registered again by anyone. If `nick` is not specified, will drop current client nick.
 
-### client.nickserv.verify(nick, key, [callback(err)])
+### NickServ#verify(nick, key, [callback(err)])
+
 Verifies registraton for the given nick with the given key.
 
-### client.nickserv.setPassword(password, callback(err))
+### NickServ#setPassword(password, callback(err))
+
 Set the current client nick password with given password.
 
-### client.cmd(command, [args...])
+### NickServ#nd, [args...])
+
 Sends a command to NickServ. Use this if a command you want to use hasn't been covered by one of the other functions yet.
 
-### client.nickserv.ready([callback(err)], [options])
+### NickServ#ready([callback(err)], [options])
+
 If password is given, checks if current nickname is registered. If it's registered, tries to identify. If nick is not registered and email is given, tries to register. When it's all finished and ready, calls `callback`. Providing `options` will use that object to get password and email instead of the one from the constructor.
 
 
