@@ -15,7 +15,7 @@ util.inherits(Client, EventEmitter);
 
 
 Client.prototype.connect = function(cb) {
-  if (servers[this.server] === undefined) {
+  if (!servers[this.server]) {
     servers[this.server] = new IRCServer();
   }
 

@@ -3,6 +3,10 @@ var util      = require('./util');
 var createBot = require('./bot');
 
 
+process.on('uncaughtException', function(err) {
+  console.error(err.stack);
+});
+
 function error(type, nick, fn, args) {
   var obj = {
     topic: function(bot) {
@@ -166,8 +170,10 @@ exports.ready = function(nick, options, emit, dontemit, type) {
           events[event] = true;
         });
       });
-      bot.nickserv.ready(function(err) {
-        bot.kill(cb, null, err, bot);
+      bot.connect(function() {
+        bot.nickserv.ready(function(err) {
+          bot.kill(cb, null, err, bot);
+        });
       });
     }
   };
@@ -176,6 +182,7 @@ exports.ready = function(nick, options, emit, dontemit, type) {
     obj[type] = util.type(type, nick);
   } else {
     obj.Ready = function(n, err, bot) {
+      if (err) throw err;
       assert.equal(nick, bot.nick);
       assert.isTrue(!err, err ? err.message : undefined);
     };

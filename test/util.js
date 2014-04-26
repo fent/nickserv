@@ -31,7 +31,7 @@ exports.type = function(errtype, nick) {
   errtype = camelCase(errtype);
   return function(n, err, bot) {
     assert.equal(nick, bot.nick);
-    assert.ok(err);
+    assert.ok(err, err);
     assert.equal(err.type, errtype);
   };
 };
