@@ -1,8 +1,9 @@
-var nickserv = require('..');
+var NickServ = require('..');
 var irc      = require('irc');
 
 // Initialize irc client.
-var client = new irc.Client('irc.freenode.net', 'somenick402', {
+var nick = 'somenick402';
+var client = new irc.Client('irc.freenode.net', nick, {
   channels: ['#fent'],
 });
 
@@ -21,17 +22,17 @@ client.on('error', function(err) {
 // This will create a new nickserv object on the irc client
 // with the provided options
 // that can be used to talk with the nickserv service.
-/*
-nickserv.create(client, {
+var nickserv = new NickServ(nick, {
   password: 'hunter2',
   email: 'roly426@mail.com'
 });
 
+nickserv.attach('irc', client);
+
 // callback will get called when nick is identified/registered.
 // Will connect the irc client if not already connected.
-client.nickserv.ready(function(err) {
+nickserv.ready(function(err) {
   if (err) throw err;
   console.log('I am ready!');
   client.join('#fent');
 });
-*/
