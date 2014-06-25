@@ -2,6 +2,9 @@
 
 Provides shortcuts for communicating with NickServ in irc servers.
 
+## Abandoned
+
+I am unable to maintain this anymore. Feel free to fork.
 
 # Usage
 
