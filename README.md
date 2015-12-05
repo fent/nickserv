@@ -1,10 +1,8 @@
-# nickserv [![Build Status](https://secure.travis-ci.org/fent/nickserv.png)](http://travis-ci.org/fent/nickserv)
+# nickserv
 
 Provides shortcuts for communicating with NickServ in irc servers.
 
-## Abandoned
-
-I am unable to maintain this anymore. Feel free to fork.
+[![Build Status](https://secure.travis-ci.org/fent/nickserv.png)](http://travis-ci.org/fent/nickserv) [![Dependency Status](https://gemnasium.com/fent/nickserv.svg)](https://gemnasium.com/fent/nickserv)
 
 # Usage
 
