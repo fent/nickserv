@@ -2,7 +2,7 @@ var NickServ = require('..');
 var irc      = require('irc');
 
 // Initialize irc client.
-var nick = 'somenick402';
+var nick = 'somenick4022';
 var client = new irc.Client('irc.freenode.net', nick, {
   channels: ['#fent'],
 });
@@ -24,7 +24,7 @@ client.on('error', function(err) {
 // that can be used to talk with the nickserv service.
 var nickserv = new NickServ(nick, {
   password: 'hunter2',
-  email: 'fent@mail.com'
+  email: 'myemail@mail.com'
 });
 
 nickserv.attach('irc', client);

@@ -14,6 +14,7 @@ module.exports =
         match: [
           /^(.+) is not a registered nickname\.$/m
           /^Your nick isn't registered\.$/m
+          /^(.+) is not registered\.$/m
         ]
       unknownCommand: unknownCommand =
         msg: 'Unknown Command'

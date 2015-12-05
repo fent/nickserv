@@ -62,8 +62,18 @@ module.exports = class Nick extends EventEmitter
         client.on 'notice', (nick, to, text) =>
           if nick is 'NickServ'
             @message text
+        msgQueue = []
+        registered = false
+        client.once 'registered', ->
+          registered = true
+          for msg in msgQueue
+            client.say 'NickServ', msg
+          msgQueue = []
         @send = (text) ->
-          client.say 'NickServ', text
+          if registered
+            client.say 'NickServ', text
+          else
+            msgQueue.push text
 
   # Reset on reconnects and nick changes.
   reset: ->
