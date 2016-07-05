@@ -50,7 +50,7 @@ module.exports = function createBot(type, nick, fn, log, options) {
     }
   });
 
-  // When this bot disconnect, close log file.
+  // When this bot disconnects, close log file.
   bot.kill = function(cb) {
     var args = Array.prototype.slice.call(arguments).slice(1);
     if (bot.disconnect) {
