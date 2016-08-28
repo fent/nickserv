@@ -14,7 +14,7 @@
   "author": "Roly Fentanes (https://github.com/fent)",
   "main": "./lib/nickserv.js",
   "scripts": {
-    "test": "vows test/test.js --spec --logic"
+    "test": "istanbul cover vows -- --spec --logic test/test.js"
   },
   "directories": {
     "lib": "./lib"
@@ -23,6 +23,7 @@
     "sprintf": "~0.1.1"
   },
   "devDependencies": {
+    "istanbul": "*",
     "irc": "~0.5.0",
     "nickie": "~0.1.0",
     "optimist": "~0.6.1",
