@@ -25,7 +25,7 @@
   "devDependencies": {
     "istanbul": "*",
     "irc": "~0.5.0",
-    "nickie": "~0.1.0",
+    "nickie": "~0.2.0",
     "optimist": "~0.6.1",
     "vows": "~0.8.1",
     "writestreamp": "~0.1.0"
