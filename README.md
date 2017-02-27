@@ -3,7 +3,7 @@
 Provides shortcuts for communicating with NickServ in irc servers.
 
 [![Build Status](https://secure.travis-ci.org/fent/nickserv.svg)](http://travis-ci.org/fent/nickserv)
-[![Dependency Status](https://gemnasium.com/fent/nickserv.svg)](https://gemnasium.com/fent/nickserv)
+[![Dependency Status](https://david-dm.org/fent/nickserv.svg)](https://david-dm.org/fent/nickserv)
 [![codecov](https://codecov.io/gh/fent/nickserv/branch/master/graph/badge.svg)](https://codecov.io/gh/fent/nickserv)
 
 # Usage
