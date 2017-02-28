@@ -89,11 +89,11 @@ Verifies registraton for the given nick with the given key.
 
 Set the current client nick password with given password.
 
-### NickServ#nd, [args...])
+### NickServ#send(command, [args...])
 
 Sends a command to NickServ. Use this if a command you want to use hasn't been covered by one of the other functions yet.
 
-### NickServ#ready([callback(err)], [options])
+### NickServ#ready([options], [callback(err)])
 
 If password is given, checks if current nickname is registered. If it's registered, tries to identify. If nick is not registered and email is given, tries to register. When it's all finished and ready, calls `callback`. Providing `options` will use that object to get password and email instead of the one from the constructor.
 
