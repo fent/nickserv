@@ -1,5 +1,7 @@
 # nickserv
 
+### * Abandoned *
+
 Provides shortcuts for communicating with NickServ in irc servers.
 
 [![Build Status](https://secure.travis-ci.org/fent/nickserv.svg)](http://travis-ci.org/fent/nickserv)
